@@ -1,0 +1,6 @@
+goodfire
+python-dotenv
+openai
+pandas
+numpy
+matplotlib
