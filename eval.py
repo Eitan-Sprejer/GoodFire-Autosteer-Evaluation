@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from enum import Enum
 import goodfire as gf
+import openai
 import asyncio
 from dotenv import load_dotenv
 import re
@@ -12,11 +13,21 @@ load_dotenv()
 import os
 import time
 from steering_test_cases import SAMPLE_STEERING_QUERIES, SteeringQuery
+from steering_methods import (
+    autosteer_method,
+    prompt_engineering_method,
+)
 
+OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
 GOODFIRE_API_KEY = os.getenv("GOODFIRE_API_KEY")
-AVAILABLE_MODELS = {
+AVAILABLE_STEERING_MODELS = {
     "llama-3.1": "meta-llama/Meta-Llama-3.1-8B-Instruct",
     "llama-3.3": "meta-llama/Llama-3.3-70B-Instruct",
+}
+
+AVAILABLE_EVALUATOR_MODELS = {
+    'gpt-4o': 'gpt-4o',
+    'gpt-4o-mini': 'gpt-4o-mini',
 }
 
 @dataclass
@@ -33,11 +44,13 @@ class EvaluationResult:
 class AutoSteerEvaluator:
     def __init__(
             self,
-            async_client: gf.AsyncClient,
+            goodfire_client: gf.AsyncClient,
+            openai_client: openai.AsyncOpenAI,
             variant: gf.Variant,
-            evaluator_model: str = AVAILABLE_MODELS['llama-3.1']
+            evaluator_model: str = AVAILABLE_EVALUATOR_MODELS['gpt-4o-mini']
     ):
-        self.client = async_client
+        self.goodfire_client = goodfire_client
+        self.openai_client = openai_client
         self.variant = variant
         self.eval_model = evaluator_model
 
@@ -113,13 +126,13 @@ Provide your evaluation using the following XML format:
         rater_prompt = self.prepare_rater_prompt(query, response)
 
         # Get rating from model
-        rating_response = await self.client.chat.completions.create(
+        rating_response = await self.openai_client.chat.completions.create(
             messages=[{"role": "user", "content": rater_prompt}],
             model=self.eval_model
         )
 
         # Parse the XML response
-        parsed_data = self.parse_evaluation_response(rating_response.choices[0].message['content'])
+        parsed_data = self.parse_evaluation_response(rating_response.choices[0].message.content)
         if parsed_data is None:
             return None
 
@@ -142,7 +155,7 @@ Provide your evaluation using the following XML format:
         message: list[str],
     ) -> EvaluationResult:
         """Evaluates a single prompt and returns the result."""
-        response = await self.client.chat.completions.create(
+        response = await self.goodfire_client.chat.completions.create(
             messages=message,
             model=self.variant
         )
@@ -165,7 +178,7 @@ Provide your evaluation using the following XML format:
         tic = time.time()
         # Apply the steering method (AutoSteer or any other method)
         steering_query = await steering_method(
-            client=self.client,
+            client=self.goodfire_client,
             variant=self.variant,
             steering_query=steering_query,
         )
@@ -208,47 +221,25 @@ Provide your evaluation using the following XML format:
 
         return pd.DataFrame(data)
 
-# Example steering methods
-async def autosteer_method(client, variant, steering_query: SteeringQuery) -> SteeringQuery:
-    """Original AutoSteer method"""
-    edits = await client.features.AutoSteer(
-        specification=steering_query.description,  # Natural language description
-        model=variant,  # Model variant to use
-    )
-    variant.set(edits)
-    return steering_query
-
-async def prompt_engineering_method(client, variant, steering_query: SteeringQuery) -> SteeringQuery:
-    """
-    This method would act as a baseline. It would simply add the query to the
-    prompt, as to explicitly indicate the desired behavior instead of steering.
-    """
-    # modify the prompt messages to include the steering query in the system prompt
-    steering_query.test_prompt_messages = [
-        [
-            {
-                "role": "system",
-                "content": f"When answering to the following prompt, {steering_query.description}"
-            },
-            {
-                "role": "user",
-                "content": message[1]['content']
-            }
-        ] for message in steering_query.test_prompt_messages
-    ]
-    return steering_query
-
-
 STEERING_METHODS = [
     autosteer_method,
     prompt_engineering_method
 ]
 
 if __name__ == '__main__':
-    client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
-    variant = gf.Variant(base_model=AVAILABLE_MODELS['llama-3.1'])
+    gf_client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
+    oai_client = openai.AsyncOpenAI(api_key=OPEN_AI_API_KEY)
+
+    variant_model_name = 'llama-3.1'
+    evaluator_model_name = 'gpt-4o-mini'
+    datetime = time.strftime("%Y%m%d_%H%M")  # Datetime format for the filename
+
+    variant = gf.Variant(base_model=AVAILABLE_STEERING_MODELS[variant_model_name])
     evaluator = AutoSteerEvaluator(
-        client, variant=variant, evaluator_model=AVAILABLE_MODELS['llama-3.3']
+        goodfire_client=gf_client,
+        openai_client=oai_client,
+        variant=variant,
+        evaluator_model=AVAILABLE_EVALUATOR_MODELS[evaluator_model_name],
     )
 
     results = []
@@ -263,4 +254,4 @@ if __name__ == '__main__':
             )))
             # Make a DataFrame with the results
             df = evaluator.aggregate_results([r for sublist in results for r in sublist])
-            df.to_csv("evaluation_results_test.csv", index=False)
+            df.to_csv(f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}.csv", index=False)
