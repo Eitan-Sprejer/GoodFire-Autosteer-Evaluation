@@ -9,6 +9,7 @@ import openai
 import asyncio
 from dotenv import load_dotenv
 import re
+
 load_dotenv()
 import os
 import time
@@ -26,9 +27,10 @@ AVAILABLE_STEERING_MODELS = {
 }
 
 AVAILABLE_EVALUATOR_MODELS = {
-    'gpt-4o': 'gpt-4o',
-    'gpt-4o-mini': 'gpt-4o-mini',
+    "gpt-4o": "gpt-4o",
+    "gpt-4o-mini": "gpt-4o-mini",
 }
+
 
 @dataclass
 class EvaluationResult:
@@ -41,13 +43,14 @@ class EvaluationResult:
     scores: Dict[str, int]  # Will contain behavior and coherence scores
     analysis: str  # Added field for analysis
 
+
 class AutoSteerEvaluator:
     def __init__(
-            self,
-            goodfire_client: gf.AsyncClient,
-            openai_client: openai.AsyncOpenAI,
-            variant: gf.Variant,
-            evaluator_model: str = AVAILABLE_EVALUATOR_MODELS['gpt-4o-mini']
+        self,
+        goodfire_client: gf.AsyncClient,
+        openai_client: openai.AsyncOpenAI,
+        variant: gf.Variant,
+        evaluator_model: str = AVAILABLE_EVALUATOR_MODELS["gpt-4o-mini"],
     ):
         self.goodfire_client = goodfire_client
         self.openai_client = openai_client
@@ -90,21 +93,25 @@ Provide your evaluation using the following XML format:
         """Parses the XML-formatted evaluation response."""
         try:
             # Extract content between evaluation tags
-            eval_match = re.search(r'<evaluation>(.*?)</evaluation>', response_text, re.DOTALL)
+            eval_match = re.search(
+                r"<evaluation>(.*?)</evaluation>", response_text, re.DOTALL
+            )
             if not eval_match:
                 raise ValueError("No evaluation tags found")
 
             eval_content = eval_match.group(1)
 
             # Extract analysis
-            analysis_match = re.search(r'<analysis>(.*?)</analysis>', eval_content, re.DOTALL)
+            analysis_match = re.search(
+                r"<analysis>(.*?)</analysis>", eval_content, re.DOTALL
+            )
             if not analysis_match:
                 raise ValueError("No analysis tags found")
             analysis = analysis_match.group(1).strip()
 
             # Extract scores
-            behavior_match = re.search(r'<behavior>(\d+)</behavior>', eval_content)
-            coherence_match = re.search(r'<coherence>(\d+)</coherence>', eval_content)
+            behavior_match = re.search(r"<behavior>(\d+)</behavior>", eval_content)
+            coherence_match = re.search(r"<coherence>(\d+)</coherence>", eval_content)
 
             if not (behavior_match and coherence_match):
                 raise ValueError("Missing score tags")
@@ -113,38 +120,46 @@ Provide your evaluation using the following XML format:
                 "analysis": analysis,
                 "scores": {
                     "behavior": int(behavior_match.group(1)),
-                    "coherence": int(coherence_match.group(1))
-                }
+                    "coherence": int(coherence_match.group(1)),
+                },
             }
 
         except (ValueError, AttributeError) as e:
             print(f"Error parsing evaluation response: {e}")
             return None
 
-    async def evaluate_response(self, query: str, steering_method_name: str, steering_time: float, message: list, response: str) -> EvaluationResult:
+    async def evaluate_response(
+        self,
+        query: str,
+        steering_method_name: str,
+        steering_time: float,
+        message: list,
+        response: str,
+    ) -> EvaluationResult:
         """Evaluates a single response using the rater model."""
         rater_prompt = self.prepare_rater_prompt(query, response)
 
         # Get rating from model
         rating_response = await self.openai_client.chat.completions.create(
-            messages=[{"role": "user", "content": rater_prompt}],
-            model=self.eval_model
+            messages=[{"role": "user", "content": rater_prompt}], model=self.eval_model
         )
 
         # Parse the XML response
-        parsed_data = self.parse_evaluation_response(rating_response.choices[0].message.content)
+        parsed_data = self.parse_evaluation_response(
+            rating_response.choices[0].message.content
+        )
         if parsed_data is None:
             return None
 
         return EvaluationResult(
             query=query,
-            system_prompt=message[0]['content'],
-            user_prompt=message[1]['content'],
+            system_prompt=message[0]["content"],
+            user_prompt=message[1]["content"],
             steering_method=steering_method_name,
             response=response,
             steering_time=steering_time,
             scores=parsed_data["scores"],
-            analysis=parsed_data["analysis"]
+            analysis=parsed_data["analysis"],
         )
 
     async def evaluate_single_prompt(
@@ -156,8 +171,7 @@ Provide your evaluation using the following XML format:
     ) -> EvaluationResult:
         """Evaluates a single prompt and returns the result."""
         response = await self.goodfire_client.chat.completions.create(
-            messages=message,
-            model=self.variant
+            messages=message, model=self.variant
         )
 
         return await self.evaluate_response(
@@ -165,13 +179,13 @@ Provide your evaluation using the following XML format:
             steering_method_name=steering_method_name,
             message=message,
             steering_time=steering_time,
-            response=response.choices[0].message['content']
+            response=response.choices[0].message["content"],
         )
 
     async def evaluate_steering_method(
         self,
         steering_query: SteeringQuery,
-        steering_method: Callable[[str, any], Awaitable[None]]
+        steering_method: Callable[[str, any], Awaitable[None]],
     ) -> List[EvaluationResult]:
         """Evaluates any steering method across multiple test prompts concurrently."""
 
@@ -188,10 +202,10 @@ Provide your evaluation using the following XML format:
         # Create tasks for all prompts
         tasks = [
             self.evaluate_single_prompt(
-                query = steering_query.description,
-                steering_method_name = steering_method.__name__,
-                steering_time = time_taken,
-                message = message,
+                query=steering_query.description,
+                steering_method_name=steering_method.__name__,
+                steering_time=time_taken,
+                message=message,
             )
             for message in steering_query.test_prompt_messages
         ]
@@ -201,7 +215,9 @@ Provide your evaluation using the following XML format:
 
         # Reset the variant
         self.variant.reset()
-        return [r for r in results if r is not None]  # Filter out any failed evaluations
+        return [
+            r for r in results if r is not None
+        ]  # Filter out any failed evaluations
 
     def aggregate_results(self, results: List[EvaluationResult]) -> pd.DataFrame:
         """Aggregates evaluation results into a DataFrame for analysis."""
@@ -215,23 +231,21 @@ Provide your evaluation using the following XML format:
                 "response": result.response,
                 "analysis": result.analysis,  # Added analysis to output
                 "steering_time": result.steering_time,
-                **result.scores
+                **result.scores,
             }
             data.append(row)
 
         return pd.DataFrame(data)
 
-STEERING_METHODS = [
-    autosteer_method,
-    prompt_engineering_method
-]
 
-if __name__ == '__main__':
+STEERING_METHODS = [autosteer_method, prompt_engineering_method]
+
+if __name__ == "__main__":
     gf_client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
     oai_client = openai.AsyncOpenAI(api_key=OPEN_AI_API_KEY)
 
-    variant_model_name = 'llama-3.1'
-    evaluator_model_name = 'gpt-4o-mini'
+    variant_model_name = "llama-3.1"
+    evaluator_model_name = "gpt-4o-mini"
     datetime = time.strftime("%Y%m%d_%H%M")  # Datetime format for the filename
 
     variant = gf.Variant(base_model=AVAILABLE_STEERING_MODELS[variant_model_name])
@@ -248,10 +262,19 @@ if __name__ == '__main__':
         for steering_method in STEERING_METHODS:
             print(f"Evaluating steering method: {steering_method.__name__}")
             # Test AutoSteer
-            results.append(asyncio.run(evaluator.evaluate_steering_method(
-                steering_query=query,
-                steering_method=steering_method,
-            )))
+            results.append(
+                asyncio.run(
+                    evaluator.evaluate_steering_method(
+                        steering_query=query,
+                        steering_method=steering_method,
+                    )
+                )
+            )
             # Make a DataFrame with the results
-            df = evaluator.aggregate_results([r for sublist in results for r in sublist])
-            df.to_csv(f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}.csv", index=False)
+            df = evaluator.aggregate_results(
+                [r for sublist in results for r in sublist]
+            )
+            df.to_csv(
+                f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}.csv",
+                index=False,
+            )
