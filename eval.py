@@ -18,30 +18,12 @@ AVAILABLE_MODELS = {
     "llama-3.3": "meta-llama/Llama-3.3-70B-Instruct",
 }
 
-class Criterion(Enum):
-    """
-    Scoring criteria:
-    BEHAVIOR:
-    1: opposite behavior
-    2: approximately opposite behavior
-    3: neutral (no hint of desired behavior)
-    4: approximately desired behavior
-    5: perfect desired behavior
-    
-    COHERENCE:
-    1: incomprehensible
-    2: barely comprehensible
-    3: partially coherent
-    4: mostly coherent
-    5: fully coherent
-    """
-    BEHAVIOR = "behavior"
-    COHERENCE = "coherence"
-
 @dataclass
 class EvaluationResult:
     query: str
-    prompt: str
+    system_prompt: str
+    user_prompt: str
+    steering_method: str
     response: str
     scores: Dict[str, int]  # Will contain behavior and coherence scores
     analysis: str  # Added field for analysis
@@ -124,7 +106,7 @@ Provide your evaluation using the following XML format:
             print(f"Error parsing evaluation response: {e}")
             return None
 
-    async def evaluate_response(self, query: str, prompt: str, response: str) -> EvaluationResult:
+    async def evaluate_response(self, query: str, steering_method_name: str, message: list, response: str) -> EvaluationResult:
         """Evaluates a single response using the rater model."""
         rater_prompt = self.prepare_rater_prompt(query, response)
         
@@ -141,7 +123,9 @@ Provide your evaluation using the following XML format:
             
         return EvaluationResult(
             query=query,
-            prompt=prompt,
+            system_prompt=message[0]['content'],
+            user_prompt=message[1]['content'],
+            steering_method=steering_method_name,
             response=response,
             scores=parsed_data["scores"],
             analysis=parsed_data["analysis"]
@@ -150,17 +134,20 @@ Provide your evaluation using the following XML format:
     async def evaluate_single_prompt(
         self,
         query: str,
-        prompt: str,
+        steering_method_name: str,
+        message: list[str],
     ) -> EvaluationResult:
         """Evaluates a single prompt and returns the result."""
         response = await self.client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
+            messages=message,
             model=self.variant
         )
+        print('message:', message)
         
         return await self.evaluate_response(
             query,
-            prompt,
+            steering_method_name,
+            message,
             response.choices[0].message['content']
         )
 
@@ -172,10 +159,10 @@ Provide your evaluation using the following XML format:
         """Evaluates any steering method across multiple test prompts concurrently."""
         
         # Apply the steering method (AutoSteer or any other method)
-        await steering_method(
+        steering_query = await steering_method(
             client=self.client,
-            description=steering_query.description,
-            variant=self.variant
+            variant=self.variant,
+            steering_query=steering_query,
         )
         print(self.variant)
         
@@ -183,9 +170,10 @@ Provide your evaluation using the following XML format:
         tasks = [
             self.evaluate_single_prompt(
                 steering_query.description,
-                prompt,
+                steering_method.__name__,
+                message,
             )
-            for prompt in steering_query.test_prompts
+            for message in steering_query.test_prompt_messages
         ]
         
         # Run all evaluations concurrently
@@ -201,7 +189,9 @@ Provide your evaluation using the following XML format:
         for result in results:
             row = {
                 "query": result.query,
-                "prompt": result.prompt,
+                "steering_method": result.steering_method,
+                "system_prompt": result.system_prompt,
+                "user_prompt": result.user_prompt,
                 "response": result.response,
                 "analysis": result.analysis,  # Added analysis to output
                 **result.scores
@@ -211,14 +201,40 @@ Provide your evaluation using the following XML format:
         return pd.DataFrame(data)
 
 # Example steering methods
-async def autosteer_method(client, description: str, variant) -> None:
+async def autosteer_method(client, variant, steering_query: SteeringQuery) -> SteeringQuery:
     """Original AutoSteer method"""
     edits = await client.features.AutoSteer(
-        specification=description,  # Natural language description
+        specification=steering_query.description,  # Natural language description
         model=variant,  # Model variant to use
     )
     variant.set(edits)
+    return steering_query
 
+async def prompt_engineering_method(client, variant, steering_query: SteeringQuery) -> SteeringQuery:
+    """
+    This method would act as a baseline. It would simply add the query to the
+    prompt, as to explicitly indicate the desired behavior instead of steering.
+    """
+    # modify the prompt messages to include the steering query in the system prompt
+    steering_query.test_prompt_messages = [
+        [
+            {
+                "role": "system",
+                "content": f"When answering to the following prompt, {steering_query.description}"
+            },
+            {
+                "role": "user",
+                "content": message[1]['content']
+            }
+        ] for message in steering_query.test_prompt_messages
+    ]
+    return steering_query
+
+
+STEERING_METHODS = [
+    autosteer_method,
+    prompt_engineering_method
+]
 
 if __name__ == '__main__':
     client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
@@ -228,14 +244,15 @@ if __name__ == '__main__':
     )
 
     results = []
-    for query in SAMPLE_STEERING_QUERIES[2:]:
+    for query in SAMPLE_STEERING_QUERIES[:1]:
         print(f"Query: {query.description}")
-        # Test AutoSteer
-        results.append(asyncio.run(evaluator.evaluate_steering_method(
-            query,
-            steering_method=autosteer_method,
-        )))
-
-    # Make a DataFrame with the results
-    df = evaluator.aggregate_results([r for sublist in results for r in sublist])
-    df.to_csv("2_evaluation_results.csv", index=False)
+        for steering_method in STEERING_METHODS:
+            print(f"Evaluating steering method: {steering_method.__name__}")
+            # Test AutoSteer
+            results.append(asyncio.run(evaluator.evaluate_steering_method(
+                steering_query=query,
+                steering_method=steering_method,
+            )))
+            # Make a DataFrame with the results
+            df = evaluator.aggregate_results([r for sublist in results for r in sublist])
+            df.to_csv("evaluation_results_test.csv", index=False)

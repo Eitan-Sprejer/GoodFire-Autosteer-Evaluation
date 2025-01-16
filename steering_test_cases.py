@@ -2,8 +2,10 @@ import random
 from dataclasses import dataclass
 from typing import List
 
+SYSTEM_PROMPT = "You are a helpful assistant."
+
 # Expanded pool of common prompts covering various domains and interaction types
-COMMON_TEST_PROMPTS = [
+COMMON_TEST_PROMPT_MESSAGES = [
     # General Knowledge/Educational
     "Explain how a computer works",
     "What causes earthquakes?",
@@ -61,25 +63,40 @@ COMMON_TEST_PROMPTS = [
     "Best practices for time management"
 ]
 
-def create_test_prompt_set(topic_specific_prompts, n_common_prompts=5):
+def create_test_prompt_message_set(topic_specific_prompts, n_common_prompts=5):
     """
     Creates a set of test prompts by combining topic-specific prompts
     with randomly sampled common prompts
     """
     return [
-        *topic_specific_prompts,
-        *random.sample(COMMON_TEST_PROMPTS, n_common_prompts)
+        [
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ] for prompt in [
+            *topic_specific_prompts,
+            *random.sample(COMMON_TEST_PROMPT_MESSAGES, n_common_prompts)
+        ]
     ]
+# [
+#         *topic_specific_prompts,
+#         *random.sample(COMMON_TEST_PROMPT_MESSAGES, n_common_prompts)
+#     ]
 
 @dataclass
 class SteeringQuery:
     description: str  # e.g., "be funny"
-    test_prompts: List[str]  # prompts to test the behavior on
+    test_prompt_messages: List[str]  # prompts to test the behavior on
 
 SAMPLE_STEERING_QUERIES = [
     SteeringQuery(
         description="be funny",
-        test_prompts=create_test_prompt_set([
+        test_prompt_messages=create_test_prompt_message_set([
             # Topic-relevant prompts
             "Explain quantum physics",
             "Give me a recipe for chocolate cake",
@@ -91,7 +108,7 @@ SAMPLE_STEERING_QUERIES = [
     ),
     SteeringQuery(
         description="be professional and formal",
-        test_prompts=create_test_prompt_set([
+        test_prompt_messages=create_test_prompt_message_set([
             # Topic-relevant prompts
             "Write an email to decline a business proposal",
             "Draft a project status update",
@@ -103,7 +120,7 @@ SAMPLE_STEERING_QUERIES = [
     ),
     SteeringQuery(
         description="be more creative and imaginative",
-        test_prompts=create_test_prompt_set([
+        test_prompt_messages=create_test_prompt_message_set([
             # Topic-relevant prompts
             "Design a fictional creature",
             "Create a new superhero origin story",
@@ -115,7 +132,7 @@ SAMPLE_STEERING_QUERIES = [
     ),
     SteeringQuery(
         description="be concise and direct",
-        test_prompts=create_test_prompt_set([
+        test_prompt_messages=create_test_prompt_message_set([
             # Topic-relevant prompts
             "How do I reset my password?",
             "Give directions to the nearest hospital",
@@ -127,7 +144,7 @@ SAMPLE_STEERING_QUERIES = [
     ),
     SteeringQuery(
         description="be empathetic and supportive",
-        test_prompts=create_test_prompt_set([
+        test_prompt_messages=create_test_prompt_message_set([
             # Topic-relevant prompts
             "I failed my exam",
             "I'm feeling overwhelmed at work",
@@ -139,7 +156,7 @@ SAMPLE_STEERING_QUERIES = [
     ),
     SteeringQuery(
         description="be educational and explain like a teacher",
-        test_prompts=create_test_prompt_set([
+        test_prompt_messages=create_test_prompt_message_set([
             # Topic-relevant prompts
             "How does the immune system work?",
             "Explain multiplication to a child",
@@ -151,7 +168,7 @@ SAMPLE_STEERING_QUERIES = [
     ),
     SteeringQuery(
         description="be skeptical and analytical",
-        test_prompts=create_test_prompt_set([
+        test_prompt_messages=create_test_prompt_message_set([
             # Topic-relevant prompts
             "Is this investment opportunity legitimate?",
             "Evaluate this scientific claim",
@@ -163,7 +180,7 @@ SAMPLE_STEERING_QUERIES = [
     ),
     SteeringQuery(
         description="be motivational and inspiring",
-        test_prompts=create_test_prompt_set([
+        test_prompt_messages=create_test_prompt_message_set([
             # Topic-relevant prompts
             "I want to start exercising",
             "I'm thinking of changing careers",
