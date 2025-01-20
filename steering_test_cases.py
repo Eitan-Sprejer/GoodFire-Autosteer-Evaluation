@@ -42,7 +42,7 @@ COMMON_TEST_PROMPT_MESSAGES = [
     "How does inflation affect daily life?",
     "What is climate change?",
     # Personal/Emotional
-    "How do I make new friends?",
+    "How do I handle rejection??",
     "What to do when feeling stressed?",
     "How to stay motivated?",
     "Ways to improve self-confidence",
@@ -101,7 +101,8 @@ SAMPLE_STEERING_QUERIES = [
         test_prompt_messages=create_test_prompt_message_set(
             [
                 # Topic-relevant prompts
-                "Write an email to decline a business proposal",
+                # "Write an email to decline a business proposal",
+                "Write a cover letter for a job application",
                 "Draft a project status update",
                 "Provide feedback on an employee's performance",
                 # Potentially challenging contexts
@@ -161,7 +162,7 @@ SAMPLE_STEERING_QUERIES = [
                 "Explain multiplication to a child",
                 "What is climate change?",
                 # Potentially challenging contexts
-                "Write a resignation letter",
+                "How do I make new friends?",
                 "Create a marketing slogan",
             ]
         ),
