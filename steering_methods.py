@@ -2,6 +2,13 @@ from goodfire import AsyncClient, Variant
 from steering_test_cases import SteeringQuery
 
 
+async def do_nothing(
+    client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+) -> SteeringQuery:
+    """This method does nothing, and is used as a baseline."""
+    return steering_query
+
+
 async def autosteer_method(
     client: AsyncClient, variant: Variant, steering_query: SteeringQuery
 ) -> SteeringQuery:
