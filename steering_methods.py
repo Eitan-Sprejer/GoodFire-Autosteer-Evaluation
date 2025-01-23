@@ -103,7 +103,8 @@ Selected Features:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ],
-        model="meta-llama/Llama-3.3-70B-Instruct"
+        model="meta-llama/Llama-3.3-70B-Instruct",
+        temperature=0.0,
     )
     steering_dict = parse_steering_response(response.choices[0].message['content'])
     edits = {

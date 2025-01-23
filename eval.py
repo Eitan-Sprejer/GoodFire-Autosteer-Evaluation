@@ -142,9 +142,15 @@ Provide your evaluation using the following XML format:
         rater_prompt = self.prepare_rater_prompt(query, response)
 
         # Get rating from model
-        rating_response = await self.openai_client.chat.completions.create(
-            messages=[{"role": "user", "content": rater_prompt}], model=self.eval_model
-        )
+        try:
+            rating_response = await self.openai_client.chat.completions.create(
+                messages=[{"role": "user", "content": rater_prompt}],
+                model=self.eval_model,
+                temperature=0.0,
+            )
+        except openai.APIConnectionError as e:
+            print(f"OpenAI Error: {e}. Returning None.")
+            return None
 
         # Parse the XML response
         parsed_data = self.parse_evaluation_response(
@@ -240,7 +246,12 @@ Provide your evaluation using the following XML format:
         return pd.DataFrame(data)
 
 
-STEERING_METHODS = [autosteer_method, prompt_engineering_method, agentic_manual_search_method]
+STEERING_METHODS = [
+    do_nothing,
+    autosteer_method,
+    agentic_manual_search_method,
+    prompt_engineering_method,
+]
 
 if __name__ == "__main__":
     gf_client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
@@ -259,10 +270,10 @@ if __name__ == "__main__":
     )
 
     results = []
-    for query in SAMPLE_STEERING_QUERIES:
-        print(f"Query: {query.description}")
-        for steering_method in STEERING_METHODS:
-            print(f"Evaluating steering method: {steering_method.__name__}")
+    for steering_method in STEERING_METHODS:
+        print(f"Evaluating steering method: {steering_method.__name__}")
+        for query in SAMPLE_STEERING_QUERIES:
+            print(f"Query: {query.description}")
             # Test AutoSteer
             results.append(
                 asyncio.run(
@@ -277,6 +288,6 @@ if __name__ == "__main__":
                 [r for sublist in results for r in sublist]
             )
             df.to_csv(
-                f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}_2.csv",
+                f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}.csv",
                 index=False,
             )
