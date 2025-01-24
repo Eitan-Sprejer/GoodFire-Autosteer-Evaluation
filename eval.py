@@ -178,9 +178,13 @@ Provide your evaluation using the following XML format:
         message: list[str],
     ) -> EvaluationResult:
         """Evaluates a single prompt and returns the result."""
-        response = await self.goodfire_client.chat.completions.create(
-            messages=message, model=self.variant
-        )
+        try:
+            response = await self.goodfire_client.chat.completions.create(
+                messages=message, model=self.variant
+            )
+        except gf.api.exceptions.ServerErrorException as e:
+            print(f"GoodFire Server Error: {e}. Returning None.")
+            return None
 
         return await self.evaluate_response(
             query=query,
@@ -257,7 +261,7 @@ if __name__ == "__main__":
     gf_client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
     oai_client = openai.AsyncOpenAI(api_key=OPEN_AI_API_KEY)
 
-    variant_model_name = "llama-3.1"
+    variant_model_name = "llama-3.3"
     evaluator_model_name = "gpt-4o-mini"
     datetime = time.strftime("%Y%m%d_%H%M")  # Datetime format for the filename
 
