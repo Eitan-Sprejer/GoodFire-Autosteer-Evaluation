@@ -112,3 +112,15 @@ Selected Features:
     }
     variant.set(edits)
     return steering_query
+
+async def autosteer_with_prompt_engineering_method(
+    client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+) -> SteeringQuery:
+    """
+    This method combines the AutoSteer method with the prompt engineering method.
+    """
+    # First, use the AutoSteer method to steer the model
+    steering_query = await autosteer_method(client, variant, steering_query)
+
+    # Then, use the prompt engineering method to add the steering query to the prompt
+    return await prompt_engineering_method(client, variant, steering_query)
