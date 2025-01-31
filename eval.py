@@ -18,7 +18,8 @@ from steering_methods import (
     autosteer_method,
     prompt_engineering_method,
     agentic_manual_search_method,
-    do_nothing
+    do_nothing,
+    autosteer_with_prompt_engineering_method
 )
 
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
@@ -255,6 +256,7 @@ STEERING_METHODS = [
     autosteer_method,
     agentic_manual_search_method,
     prompt_engineering_method,
+    autosteer_with_prompt_engineering_method,
 ]
 
 if __name__ == "__main__":
@@ -274,24 +276,25 @@ if __name__ == "__main__":
     )
 
     results = []
-    for steering_method in STEERING_METHODS:
-        print(f"Evaluating steering method: {steering_method.__name__}")
-        for query in SAMPLE_STEERING_QUERIES:
-            print(f"Query: {query.description}")
-            # Test AutoSteer
-            results.append(
-                asyncio.run(
-                    evaluator.evaluate_steering_method(
-                        steering_query=query,
-                        steering_method=steering_method,
-                    )
+    # for steering_method in STEERING_METHODS:
+    steering_method = STEERING_METHODS[-1]
+    print(f"Evaluating steering method: {steering_method.__name__}")
+    for query in SAMPLE_STEERING_QUERIES[:11]:
+        print(f"Query: {query.description}")
+        # Test steering method
+        results.append(
+            asyncio.run(
+                evaluator.evaluate_steering_method(
+                    steering_query=query,
+                    steering_method=steering_method,
                 )
             )
-            # Make a DataFrame with the results
-            df = evaluator.aggregate_results(
-                [r for sublist in results for r in sublist]
-            )
-            df.to_csv(
-                f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}.csv",
-                index=False,
-            )
+        )
+        # Make a DataFrame with the results
+        df = evaluator.aggregate_results(
+            [r for sublist in results for r in sublist]
+        )
+        df.to_csv(
+            f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}.csv",
+            index=False,
+        )
