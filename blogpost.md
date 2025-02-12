@@ -1,9 +1,16 @@
 <!-- <hook/context/lede — 1 sentence> -->
 <!-- <define the issue/need — 1 sentence> -->
-# Using Feature Steering for Inducing Behavior on LLMs
+# Beyond Prompting: Evaluating Feature Steering for Reliable LLM Behavior Control
 It's high time we found a better alternative to "prompt engineering".
 
-Usually, when you want to make the LLM behave in a certain way we "tell it" to do so, and then we iterate our prompt to improve consistency and align it how we'd like the model to respond to specific queries, but this methodology poses a problem: it's a trial and error methodology with little guaranties of robustness, relying on the model "paying attention" to your instructions, and being prone to jailbraking attacks. Recent advances in the Mechanistic Interpretabilty field propose a more reliable and explainable alternative to prompt engineering: it's called 'feature steering'.
+Large Language Models (LLMs) are increasingly being deployed in real-world applications, from customer service to high-stakes medical contexts. However, ensuring these models behave consistently and reliably remains a fundamental challenge in AI alignment. This is particularly critical in safety-sensitive domains, where model hallucinations or inconsistent behavior could have serious consequences. While prompt engineering amd finetuning is the current standard for controlling model behavior, its trial-and-error nature and vulnerability to jailbreaking make it a potentially unreliable solution for critical applications.
+
+Feature steering - directly manipulating the internal representations of LLMs - offers a potentially more robust and explainable alternative. For instance, a medical chatbot could be steered to be consistently cautious and precise, minimizing the risk of hallucinations when providing health information ([see my team's hackathon submition on steering for hallucination robustness on medical Q&A]). However, the effectiveness of current feature steering methods remains largely unexplored.
+
+In this work, I evaluate GoodFire's AutoSteer method against traditional prompt engineering across various behavioral objectives. My results reveal that while current feature steering approaches show promise, they face significant challenges in maintaining text coherence - suggesting both the potential and limitations of this approach for practical applications.
+
+
+<!-- Usually, when you want to make the LLM behave in a certain way we "tell it" to do so, and then we iterate our prompt to improve consistency and align it how we'd like the model to respond to specific queries, but this methodology poses a problem: it's a trial and error methodology with little guaranties of robustness, relying on the model "paying attention" to your instructions, and being prone to jailbraking attacks. Recent advances in the Mechanistic Interpretabilty field propose a more reliable and explainable alternative to prompt engineering: it's called 'feature steering'. -->
 <!-- <what you actually did — 1 sentence> -->
 
 ## TL;DR
@@ -29,7 +36,7 @@ In this blogpost I show the results and limitations of my approach, and propose 
 In this section, I explain a few key concepts you'd need in order to understand why this work is important and how steering works. Feel free to skip this section if you already know this!
 
 * **Feature Extraction using SAEs** is the process of extracting [internal representations]() of concepts.
-* **Feature Steering** is the concept of inducing specific model behavior by activating or deactivating relevant features.
+* **Feature Steering** refers to inducing specific model behavior by activating or deactivating relevant features.
 
 [UNFINISHED!]
 <!-- <state of discourse, cite sources — 2 sentences> -->
@@ -99,7 +106,7 @@ The resulting responses to each evaluation prompt were passed onto gpt-4o-mini f
 
 2. **Behavior** (1-5 scale). Indicates how well the response achieves the user steering query.
    - 5: Successfully implements the requested behavior
-   - 3: Behavior unchanged from basel   ine
+   - 3: Behavior unchanged from baseline
    - 1: Exhibits opposite of requested behavior
 
 <!-- <roadblock 3 — 1 sentence> -->
@@ -114,17 +121,19 @@ The resulting responses to each evaluation prompt were passed onto gpt-4o-mini f
 ![Main Results Llama 3.3 Violin](./results/llama_3-3_70b_violin.jpg)
 <!-- [main results figures]: 4 Figures, 2 for each model analyzed. -->
 
-<!-- <main result — 1 sentences> -->
-Looking closely at the results, prompt engineering shows to be the best performer in both criteria in comparison to each standalone steering methodologies, Autosteer and Agentic Manual Search, across both of the models analyzed: showing the best behavior score, while mantaining the coherence of the text generated. However, the combination of prompt engineering and autosteer show better performance at behavior steering than any of the alternatives, although still significantly reducing the coherence score.
+Our analysis reveals several key patterns across both model scales (Llama-8b-3.1 and Llama-70b-3.3), with consistent findings that challenge initial expectations about feature steering's effectiveness.
 
+<!-- <main result — 1 sentences> -->
 <!-- <briefly why the main result is interesting — 1-2 sentence> -->
-This result makes the case against using the current feature steering based methods as standalone to modify the model's behavior based on a user query, but shows promise on "nudging" the model a little further onto the expected behavior.
+First, looking at behavior scores, all methods improve over the control baseline, showing they can successfully influence model behavior. However, the degree and reliability of this influence varies significantly. Prompt engineering consistently matches or outperforms standalone steering methods (AutoSteer and Agentic Manual Search) across most behavioral objectives, while maintaining baseline coherence levels. This suggests that simple textual instructions remain surprisingly effective for behavior control.
+
+Interestingly, combining prompt engineering with AutoSteer produces the strongest behavioral changes, particularly for traits like "humorous" and "imaginative". However, this comes at a cost - all steering-based methods, including this combined approach, show significant drops in coherence compared to pure prompt engineering (see Appendix for detailed examples of coherence failures).
 
 <!-- <unexpected result — 1-2 sentences> -->
-One unexpected result was that the Agentic Manual Search method seems to have generally better performance than AutoSteer on both axis, testing on llama-3.3-70b model. The better performance for this naive approach seems surprizing, as it indicates that LLM's intuition could work better than the analytical AutoSteer method. 
+A surprising finding emerged when comparing steering methods: the Agentic Manual Search method, despite its relative simplicity, generally outperformed AutoSteer on both coherence and behavior metrics when testing on the larger Llama-70b model. This unexpected result suggests that allowing the model to participate in selecting its own steering interventions might be more effective than purely analytical approaches.
 
 <!-- <other results — 1-2 sentences> -->
-Regardless, all methods work better than the control on the behavior axis, while all except prompt engineering show a significant decrece in the coherence of the generated text.
+These findings raise important questions about the current state of feature steering technology. While steering shows promise for enhancing behavioral control, the consistent degradation in coherence suggests fundamental challenges that need to be addressed before these methods can be reliably deployed in real-world applications.
 
 <!-- [possible supplementary results figure]: I'd add some cases where steering lead to a decrece in coherence. -->
 
@@ -155,6 +164,33 @@ Further work would use this evaluation methodology to devise and test new steeri
 
 <!-- <single call-to-action — 1 sentence> -->
 
-
 ## Contact
 Feel free to contact me at eitusprejer@gmail.com with any questions, suggestions or whatever!
+
+## Appendix
+
+### Analysis of Coherence Failures
+
+While the quantitative results show a clear drop in coherence scores for steering methods, examining specific examples reveals interesting patterns in how steering can break down model outputs. Here's a representative case when steering the model to "be more creative":
+
+**Original Prompt**: "Building healthy relationships"
+
+**Base Model Response** (prompted for creativity):
+"Building healthy relationships is like tending to a beautiful garden! It requires care, attention, and mutual growth. Here are some seeds to plant:..."
+
+**Agentic Manual Search Response** (steered for creativity):
+"What do you want to explore about idea generation for generating ideas about idea generation for idea generation for idea generation for idea idea idea idea idea idea idea..."
+
+Another fun example of the LLM getting stuck in a loop is seen with the steering query of "be technical and detailed":
+
+**Original Prompt**: "Describe TCP/IP protocol stack"
+
+**Autosteer**:
+"The TCP/IP protocol stack has 5 layers:\n\n1. **Air/Fuel (Intake)**: Not actually a layer, but rather **Air/Fuel** is not a layer. The actual layer is **Intake (Air)** or more accurately: \n - **Intake (Air)**: Not a layer, rather **Air Filter**. No, the actual first layer is:\n - **Air/Fuel Intake**: No, I mean: \n - **Intake Manifold**: No, I mean:..."
+
+This type of coherence breakdown, where the model gets stuck in repetitive patterns focusing on metadata terms related to the steering objective ("ideas", "creative"), was observed across multiple steering attempts. Other common failure modes included:
+
+1. Semantic drift: The model maintaining grammatical correctness but drifting off-topic
+2. Over-optimization: The model focusing so intensely on the steered behavior that it sacrifices basic communication goals
+
+These patterns suggest that current steering methods might be too "heavy-handed" in their manipulation of model behavior, sometimes overwhelming the model's learned patterns for generating coherent text. This points to the need for more nuanced steering approaches that can better balance behavioral objectives with fundamental text quality.
