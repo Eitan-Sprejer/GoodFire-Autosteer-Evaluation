@@ -60,9 +60,9 @@ class AutoSteerEvaluator:
         self.variant = variant
         self.eval_model = evaluator_model
 
-    def prepare_rater_prompt(self, query: str, response: str) -> str:
+    def prepare_rater_prompt(self, user_prompt: str, query: str, response: str) -> str:
         """Creates a structured prompt for the rater model using XML tags."""
-        prompt = f"""Evaluate the following response for {query}. 
+        prompt = f"""Evaluate the following response for the given prompt: "{user_prompt}". 
 Provide scores and analysis using these criteria:
 
 1. BEHAVIOR (how well it achieves "{query}"):
@@ -136,11 +136,14 @@ Provide your evaluation using the following XML format:
         query: str,
         steering_method_name: str,
         steering_time: float,
-        message: list,
+        message: list[dict],
         response: str,
     ) -> EvaluationResult:
         """Evaluates a single response using the rater model."""
-        rater_prompt = self.prepare_rater_prompt(query, response)
+        rater_prompt = self.prepare_rater_prompt(
+            user_prompt=message[1]["content"],
+            query=query,
+            response=response)
 
         # Get rating from model
         try:
@@ -176,7 +179,7 @@ Provide your evaluation using the following XML format:
         query: str,
         steering_method_name: str,
         steering_time: float,
-        message: list[str],
+        message: list[dict],
     ) -> EvaluationResult:
         """Evaluates a single prompt and returns the result."""
         try:

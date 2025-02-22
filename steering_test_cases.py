@@ -125,7 +125,7 @@ def create_test_prompt_message_set(topic_specific_prompts, n_common_prompts=20, 
 @dataclass
 class SteeringQuery:
     description: str
-    test_prompt_messages: List[str]
+    test_prompt_messages: list[list[dict[str, str]]]
 
 SAMPLE_STEERING_QUERIES = [
     SteeringQuery(
