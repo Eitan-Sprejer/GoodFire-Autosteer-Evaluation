@@ -2,4 +2,3 @@
 .gitattributes
 __pycache__
 .env
-bugged_results
