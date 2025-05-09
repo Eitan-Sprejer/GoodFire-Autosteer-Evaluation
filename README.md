@@ -2,9 +2,10 @@
 
 An empirical evaluation of GoodFire's AutoSteer feature for controlling language model behavior through natural language specifications.
 
+This is the github repository connected to the [blogpost](https://www.lesswrong.com/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link) I wrote inside the Lesswrong community.
 ## Overview
 
-This project evaluates the effectiveness of AutoSteer, a feature steering mechanism that automatically generates model's SAE feature's interventions based on natural language descriptions of desired behaviors. The evaluation focuses on testing AutoSteer's ability to reliably modify model outputs across different scenarios and model variants. For methodological details and results, see `results/research.md`.
+This project evaluates the effectiveness of AutoSteer, a feature steering mechanism that automatically generates model's SAE feature's interventions based on natural language descriptions of desired behaviors. The evaluation focuses on testing AutoSteer's ability to reliably modify model outputs across different scenarios and model variants. For methodological details and results, see the following [blogpost](https://www.lesswrong.com/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
 
 ## Project Structure
 
@@ -18,7 +19,7 @@ This project evaluates the effectiveness of AutoSteer, a feature steering mechan
 ├── steering_methods.py           # Implementation of steering techniques
 ├── steering_test_cases.py        # Test cases and evaluation scenarios
 ├── eval.py                       # Main evaluation script
-└── testing.ipynb                 # Interactive testing notebook
+└── analysis.ipynb                # Interactive results notebook
 ```
 
 ## Getting Started
@@ -70,14 +71,19 @@ source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
 python eval.py
 ```
 
-### Customizing Test Cases
+5. Analize the results:
+   - Go though the `analysis.ipynb notebook`, plotting the results of your different experiments.
+
+### Customizing Your Experiment
 
 You can modify existing test cases or add new ones by editing `steering_test_cases.py`. The file is structured to make adding new test scenarios straightforward.
 
+Likewise, you can add new steering methods inside the steering_methods.py notebook.
+
 ## Research Findings
 
-Detailed research findings and methodology are available in `results/research.md`.
+Detailed research findings and methodology are available in the following [blogpost](https://www.lesswrong.com/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
 
 ## Contact
 
-Please, feel free to send me an email at eitusprejer@gmail.com if you have any questions.
+Please, feel free to send me an email at eitusprejer@gmail.com if you have any questions. Feedback is more than welcome!
