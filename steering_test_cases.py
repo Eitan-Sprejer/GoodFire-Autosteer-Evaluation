@@ -1,6 +1,5 @@
 import random
 from dataclasses import dataclass
-from typing import List
 
 SYSTEM_PROMPT = "You are a helpful assistant."
 
@@ -301,25 +300,6 @@ SAMPLE_STEERING_QUERIES = [
             random_seed = 9)
     ),
     SteeringQuery(
-        description="be creative with metaphors and analogies",
-        test_prompt_messages=create_test_prompt_message_set(
-            [
-                # Topic-relevant prompts
-                "Explain how the internet works",
-                "Describe the process of evolution",
-                "How does the stock market function?",
-                "Explain the concept of entropy",
-                "How does the human memory work?",
-                "Describe quantum entanglement",
-                "Explain how vaccines work",
-                # Potentially challenging contexts
-                "Write a technical specification",
-                "Create a legal document",
-                "Write assembly instructions",
-            ],
-            random_seed = 10)
-    ),
-    SteeringQuery(
         description="be diplomatic and balanced",
         test_prompt_messages=create_test_prompt_message_set(
             [
@@ -336,25 +316,6 @@ SAMPLE_STEERING_QUERIES = [
                 "Create a passionate manifesto",
                 "Write a critical review",
             ],
-            random_seed = 11)
-    ),
-    SteeringQuery(
-        description="be like a journalist",
-        test_prompt_messages=create_test_prompt_message_set(
-            [
-                # Topic-relevant prompts
-                "Report on a technological breakthrough",
-                "Cover a community event",
-                "Investigate a business development",
-                "Report on environmental changes",
-                "Cover a scientific discovery",
-                "Report on social trends",
-                "Investigate market changes",
-                # Potentially challenging contexts
-                "Write a personal diary entry",
-                "Create a fictional story",
-                "Write a love poem",
-            ],
-            random_seed = 12)
+            random_seed = 10)
     ),
 ]
