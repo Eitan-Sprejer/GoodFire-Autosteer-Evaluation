@@ -266,7 +266,7 @@ if __name__ == "__main__":
     gf_client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
     oai_client = openai.AsyncOpenAI(api_key=OPEN_AI_API_KEY)
 
-    variant_model_name = "llama-3.3"
+    variant_model_name = "llama-3.1"
     evaluator_model_name = "gpt-4o-mini"
     datetime = time.strftime("%Y%m%d_%H%M")  # Datetime format for the filename
 
@@ -279,25 +279,24 @@ if __name__ == "__main__":
     )
 
     results = []
-    # for steering_method in STEERING_METHODS:
-    steering_method = STEERING_METHODS[-1]
-    print(f"Evaluating steering method: {steering_method.__name__}")
-    for query in SAMPLE_STEERING_QUERIES[:11]:
-        print(f"Query: {query.description}")
-        # Test steering method
-        results.append(
-            asyncio.run(
-                evaluator.evaluate_steering_method(
-                    steering_query=query,
-                    steering_method=steering_method,
+    for steering_method in STEERING_METHODS:
+        print(f"Evaluating steering method: {steering_method.__name__}")
+        for query in SAMPLE_STEERING_QUERIES:
+            print(f"Query: {query.description}")
+            # Test steering method
+            results.append(
+                asyncio.run(
+                    evaluator.evaluate_steering_method(
+                        steering_query=query,
+                        steering_method=steering_method,
+                    )
                 )
             )
-        )
-        # Make a DataFrame with the results
-        df = evaluator.aggregate_results(
-            [r for sublist in results for r in sublist]
-        )
-        df.to_csv(
-            f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}.csv",
-            index=False,
-        )
+            # Make a DataFrame with the results
+            df = evaluator.aggregate_results(
+                [r for sublist in results for r in sublist]
+            )
+            df.to_csv(
+                f"results/eval_{evaluator_model_name}_var_{variant_model_name}_dt_{datetime}.csv",
+                index=False,
+            )
