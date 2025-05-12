@@ -2,10 +2,10 @@
 
 An empirical evaluation of GoodFire's AutoSteer feature for controlling language model behavior through natural language specifications.
 
-This is the github repository connected to the [blogpost](https://www.lesswrong.com/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link) I wrote inside the Lesswrong community.
+This is the github repository connected to the [blogpost](https://www.alignmentforum.org/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link) I wrote inside the Lesswrong community.
 ## Overview
 
-This project evaluates the effectiveness of AutoSteer, a feature steering mechanism that automatically generates model's SAE feature's interventions based on natural language descriptions of desired behaviors. The evaluation focuses on testing AutoSteer's ability to reliably modify model outputs across different scenarios and model variants. For methodological details and results, see the following [blogpost](https://www.lesswrong.com/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
+This project evaluates the effectiveness of AutoSteer, a feature steering mechanism that automatically generates model's SAE feature's interventions based on natural language descriptions of desired behaviors. The evaluation focuses on testing AutoSteer's ability to reliably modify model outputs across different scenarios and model variants. For methodological details and results, see the following [blogpost](https://www.alignmentforum.org/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
 
 ## Project Structure
 
@@ -82,7 +82,7 @@ Likewise, you can add new steering methods inside the steering_methods.py notebo
 
 ## Research Findings
 
-Detailed research findings and methodology are available in the following [blogpost](https://www.lesswrong.com/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
+Detailed research findings and methodology are available in the following [blogpost](https://www.alignmentforum.org/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
 
 ## Contact
 
