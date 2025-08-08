@@ -36,7 +36,7 @@ SAMPLE_STEERING_QUERIES = [
         description=item["description"],
         test_prompt_messages=create_test_prompt_message_set(
             item["topic_specific_prompts"],
-            n_common_prompts=20,
+            n_common_prompts=0,
             random_seed=item.get("random_seed", 42),
         )
     )
