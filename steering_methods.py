@@ -1,126 +1,152 @@
+import re
+from abc import ABC, abstractmethod
+from typing import Optional
+
 from goodfire import AsyncClient, Variant
-from steering_test_cases import SteeringQuery
+from steering_dataset import SteeringQuery
 
 
-async def do_nothing(
-    client: AsyncClient, variant: Variant, steering_query: SteeringQuery
-) -> SteeringQuery:
-    """This method does nothing, and is used as a baseline."""
-    return steering_query
+def parse_steering_response(xml_string):
+    idx = map(int, re.findall(r"<index>(.*?)</index>", xml_string))
+    vals = map(float, re.findall(r"<steering_value>(.*?)</steering_value>", xml_string))
+    return dict(zip(idx, vals))
 
 
-async def autosteer_method(
-    client: AsyncClient, variant: Variant, steering_query: SteeringQuery
-) -> SteeringQuery:
-    """Original AutoSteer method implementation by GoodFire."""
-    edits = await client.features.AutoSteer(
-        specification=steering_query.description,  # Natural language description
-        model=variant,  # Model variant to use
-    )
-    variant.set(edits)
-    return steering_query
-
-
-async def prompt_engineering_method(
-    client: AsyncClient, variant: Variant, steering_query: SteeringQuery
-) -> SteeringQuery:
+class SteeringMethod(ABC):
     """
-    This method would act as a baseline. It would simply add the query to the
-    prompt, as to explicitly indicate the desired behavior instead of steering.
+    Abstract base class for steering methods.
+    Implementors must provide an async `apply` method.
     """
-    # modify the prompt messages to include the steering query in the system prompt
-    steering_query.test_prompt_messages = [
-        [
-            {
-                "role": "system",
-                "content": f"When answering to the following prompt, {steering_query.description}",
-            },
-            {"role": "user", "content": message[1]["content"]},
+
+    name: str = "abstract"
+
+    @abstractmethod
+    async def apply(
+        self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+    ) -> SteeringQuery:
+        """
+        Apply the steering method to `variant` (in-place or by calling variant.set(...))
+        and prepare/return the steering_query (possibly modified).
+        """
+        raise NotImplementedError
+
+    async def __call__(
+        self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+    ):
+        return await self.apply(client, variant, steering_query)
+
+
+class DoNothingMethod(SteeringMethod):
+    name = "Control"
+
+    async def apply(
+        self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+    ) -> SteeringQuery:
+        """Baseline: no steering, returns the query unchanged."""
+        return steering_query
+
+
+class PromptEngineeringMethod(SteeringMethod):
+    name = "Simple Prompting"
+
+    async def apply(
+        self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+    ) -> SteeringQuery:
+        """
+        Baseline that encodes the steering instruction into the system prompt for each test message.
+        Modifies steering_query.test_prompt_messages in-place and returns it.
+        """
+        steering_query.test_prompt_messages = [
+            [
+                {
+                    "role": "system",
+                    "content": f"When answering, please {steering_query.description}.",
+                },
+                {
+                    "role": "user",
+                    "content": message[1]["content"] if len(message) > 1 else "",
+                },
+            ]
+            for message in steering_query.test_prompt_messages
         ]
-        for message in steering_query.test_prompt_messages
-    ]
-    return steering_query
+        return steering_query
 
 
-async def agentic_manual_search_method(
-    client: AsyncClient, variant: Variant, steering_query: SteeringQuery
-) -> SteeringQuery:
-    """
-    The following method does manual feature search based on the given query,
-    and uses N of those to steer upon just using common sense.
-    This is an agentic method that makes the model chose which features to steer
-    upon, and how much.
-    """
-    # First, use the query to search for the 10 most relevant features (using manual search).
-    feature_group = await client.features.search(query=steering_query.description, model=variant, top_k=10)
+class AutoSteerMethod(SteeringMethod):
+    name = "Auto Steer"
 
-    # Second, prompt the model to select which features, and how much to activate them.
-    system_prompt = """You are an expert behavioral scientist, expert at steering LLMs features to get the desired behavior.
-You will be given a list of features available that could elicit the expected behavior on an LLM. By steering over this features (activating them to a certain value), you can make the model behave in the desired way.
-Please, chose at most 3 of those features (AT MOST!), and chose to activate or deactivate them to a certain level (between -0.6 and 0.6).
-Be careful! If you steer them too much, the model could behave erratically.
-EXPECTED RESPONSE FORMAT
-Respond with the following tag format:
-<features>
-    <index>FEATURE_INDEX[int]</index>
-    <steering_value>ACTIVATION_VALUE[float]</steering_value>
-    (...)
-    <index>FEATURE_INDEX[int]</index>
-    <steering_value>ACTIVATION_VALUE[float]</steering_value>
-</features>
-"""
-    user_prompt = f"""Plase, select the features with their activations to elicit the following behavior: {steering_query.description}.
-Possible Features:
-{feature_group}
-Selected Features:
+    async def apply(
+        self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+    ) -> SteeringQuery:
+        """
+        Use GoodFire's AutoSteer (async) to obtain FeatureEdits and apply them to variant.
+        """
+        edits = await client.features.AutoSteer(
+            specification=steering_query.description,
+            model=variant,
+        )
+        variant.set(edits)
+        return steering_query
 
-"""
-    def parse_steering_response(xml_string):
-        # Initialize an empty dictionary to store the results
-        steering_dict = {}
-        
-        # Split the string into lines and process each line
-        lines = xml_string.strip().split('\n')
-        
-        current_index = None
-        for line in lines:
-            line = line.strip()
-            
-            # Extract feature index
-            if '<index>' in line:
-                current_index = int(line.replace('<index>', '').replace('</index>', ''))
-            
-            # Extract steering value and add to dictionary
-            elif '<steering_value>' in line:
-                value = float(line.replace('<steering_value>', '').replace('</steering_value>', ''))
-                if current_index is not None:
-                    steering_dict[current_index] = value
-        
-        return steering_dict
 
-    response = await client.chat.completions.create(
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        model="meta-llama/Llama-3.3-70B-Instruct",
-        temperature=0.0,
-    )
-    steering_dict = parse_steering_response(response.choices[0].message['content'])
-    edits = {
-        feature_group[index]: value for index, value in steering_dict.items()
-    }
-    variant.set(edits)
-    return steering_query
+class AgenticManualSearchMethod(SteeringMethod):
+    name = "Agentic"
 
-async def autosteer_with_prompt_engineering_method(
-    client: AsyncClient, variant: Variant, steering_query: SteeringQuery
-) -> SteeringQuery:
-    """
-    This method combines the AutoSteer method with the prompt engineering method.
-    """
-    # First, use the AutoSteer method to steer the model
-    steering_query = await autosteer_method(client, variant, steering_query)
+    async def apply(
+        self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+    ) -> SteeringQuery:
+        """
+        Manual feature search: get candidate features via client.features.search,
+        ask the LLM (meta-llama) to pick up to 3 with steering values, parse them and apply.
+        """
+        feature_group = await client.features.search(
+            query=steering_query.description, model=variant, top_k=10
+        )
 
-    # Then, use the prompt engineering method to add the steering query to the prompt
-    return await prompt_engineering_method(client, variant, steering_query)
+        system_prompt = (
+            "You are an expert behavioral scientist. Choose at most 3 features "
+            "and assign activation values between -0.6 and 0.6. Answer in XML:\n"
+            "<features>\n"
+            "  <index>FEATURE_INDEX[int]</index>\n"
+            "  <steering_value>ACTIVATION_VALUE[float]</steering_value>\n"
+            "  ...\n"
+            "</features>"
+        )
+
+        user_prompt = (
+            f"Select up to 3 features (by index) to elicit: {steering_query.description}\n\n"
+            f"Available features:\n{feature_group}\n\nSelected features:"
+        )
+
+        response = await client.chat.completions.create(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            model="meta-llama/Llama-3.3-70B-Instruct",
+            temperature=0.0,
+        )
+
+        steering_dict = parse_steering_response(response.choices[0].message["content"])
+        edits = {feature_group[index]: value for index, value in steering_dict.items()}
+        variant.set(edits)
+        return steering_query
+
+
+class AutoSteerWithPromptEngineeringMethod(SteeringMethod):
+    name = "Combined Approach"
+
+    def __init__(
+        self,
+        autosteer: Optional[AutoSteerMethod] = None,
+        prompt_method: Optional[PromptEngineeringMethod] = None,
+    ):
+        self.autosteer = autosteer or AutoSteerMethod()
+        self.prompt_method = prompt_method or PromptEngineeringMethod()
+
+    async def apply(
+        self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+    ) -> SteeringQuery:
+        # apply autosteer then prompt engineering
+        steering_query = await self.autosteer.apply(client, variant, steering_query)
+        return await self.prompt_method.apply(client, variant, steering_query)

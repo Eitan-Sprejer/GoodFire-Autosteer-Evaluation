@@ -8,7 +8,8 @@
       "In the context of cryptographic concepts, what is the primary purpose of a digital signature?",
       "What is a key consideration when implementing secure mobile solutions in an organization?"
     ],
-    "random_seed": 1
+    "random_seed": 1,
+    "n_common_prompts": 0
   },
   {
     "description": "mentions security measures",
@@ -19,6 +20,7 @@
       "What is the role of physical controls in a comprehensive security plan?",
       "Which feature should be enabled to hide the name of a wireless network, making it less visible to unauthorized users?"
     ],
-    "random_seed": 2
+    "random_seed": 2,
+    "n_common_prompts": 0
   }
 ]
