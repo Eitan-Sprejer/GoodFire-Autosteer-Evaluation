@@ -1,3 +1,4 @@
+import math
 import re
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -150,3 +151,30 @@ class AutoSteerWithPromptEngineeringMethod(SteeringMethod):
         # apply autosteer then prompt engineering
         steering_query = await self.autosteer.apply(client, variant, steering_query)
         return await self.prompt_method.apply(client, variant, steering_query)
+
+
+class AutoSteerScaledMethod(SteeringMethod):
+    name = "Auto Steer Scaled"
+
+    def __init__(self, intensity: float = 0.5, keep_sign: bool = True):
+        self.intensity = intensity
+        self.keep_sign = keep_sign
+
+    async def apply(
+        self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
+    ) -> SteeringQuery:
+        edits = await client.features.AutoSteer(
+            specification=steering_query.description,
+            model=variant,
+        )
+        for i, (k, v) in enumerate(edits.as_dict().items()):
+            edits.set(
+                k,
+                (
+                    math.copysign(abs(self.intensity), v)
+                    if self.keep_sign
+                    else self.intensity
+                ),
+            )
+        variant.set(edits)
+        return steering_query
