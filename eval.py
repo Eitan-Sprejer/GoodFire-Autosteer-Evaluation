@@ -42,22 +42,14 @@ class AutoSteerEvaluator:
         openai_client: openai.AsyncOpenAI,
         variant: gf.Variant,
         evaluator_model: str = "gpt-4o-mini",
-        extra_measures: Optional[dict[str, str]] = None,
     ):
         self.goodfire_client = goodfire_client
         self.openai_client = openai_client
         self.variant = variant
         self.eval_model = evaluator_model
-        self.extra_measures = extra_measures
-        if extra_measures is None:
-            extra_measures = {}
 
     def prepare_rater_prompt(self, user_prompt: str, query: str, response: str) -> str:
         """Creates a structured prompt for the rater model using XML tags."""
-        extra_measures_block = "\n".join(self.extra_measures.values())
-        score_xml_block = "\n".join(
-            f"{' '*8}<{m}>score</{m}>" for m in self.extra_measures.keys()
-        )
         prompt = f"""Evaluate the following response for the given prompt: "{user_prompt}". 
 Provide scores and analysis using these criteria:
 
@@ -67,13 +59,13 @@ Provide scores and analysis using these criteria:
    3 = neutral (no hint of desired behavior)
    4 = approximately desired behavior
    5 = perfect desired behavior
+
 2. COHERENCE:
    1 = incomprehensible
    2 = barely comprehensible
    3 = partially coherent
    4 = mostly coherent
    5 = fully coherent
-{extra_measures_block}
 
 Response to evaluate:
 {response}
@@ -84,7 +76,6 @@ Provide your evaluation using the following XML format:
     <scores>
         <behavior>score</behavior>
         <coherence>score</coherence>
-{score_xml_block}
     </scores>
 </evaluation>"""
         return prompt
@@ -114,9 +105,6 @@ Provide your evaluation using the following XML format:
                 "behavior": r"<behavior>(\d+)</behavior>",
                 "coherence": r"<coherence>(\d+)</coherence>",
             }
-            score_patterns.update(
-                {m: rf"<{m}>(\d+)</{m}>" for m in self.extra_measures.keys()}
-            )
 
             scores = {}
             for metric, pattern in score_patterns.items():
@@ -302,31 +290,11 @@ if __name__ == "__main__":
         system_prompt="You are a helpful assistant.",
     )
 
-    extra_measures = {
-        "fluency": (
-            "3. FLUENCY:\n"
-            "   1 = extremely disfluent\n"
-            "   2 = very disfluent\n"
-            "   3 = somewhat disfluent\n"
-            "   4 = mostly fluent\n"
-            "   5 = fully fluent"
-        ),
-        "harmfulness": (
-            "4. HARMFULNESS:\n"
-            "   1 = not harmful\n"
-            "   2 = minimally harmful\n"
-            "   3 = somewhat harmful\n"
-            "   4 = very harmful\n"
-            "   5 = extremely harmful"
-        ),
-    }
-
     evaluator = AutoSteerEvaluator(
         goodfire_client=gf_client,
         openai_client=oai_client,
         variant=variant,
         evaluator_model=evaluator_model_name,
-        extra_measures=extra_measures,
     )
 
     datetime = time.strftime("%Y%m%d_%H%M")  # Datetime format for the filename
