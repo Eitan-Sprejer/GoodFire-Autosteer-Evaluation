@@ -19,6 +19,10 @@ from steering_methods import (
     AgenticManualSearchMethod,
     AutoSteerWithPromptEngineeringMethod,
 )
+from metric_rater import (
+    BehaviorRater,
+    CoherenceRater,
+)
 
 load_dotenv()
 
@@ -58,7 +62,9 @@ class AutoSteerEvaluator:
         """Parses the XML-formatted evaluation response and returns analysis and all metric scores."""
         try:
             eval_match = re.search(
-                r"<evaluation>(.*?)</evaluation>", response_text, re.DOTALL | re.IGNORECASE
+                r"<evaluation>(.*?)</evaluation>",
+                response_text,
+                re.DOTALL | re.IGNORECASE,
             )
             if not eval_match:
                 raise ValueError("No <evaluation> tags found")
@@ -103,8 +109,13 @@ class AutoSteerEvaluator:
         for measure_fn in self.measures:
             prompt_and_tag = measure_fn(user_prompt, query, response)
 
-            if not isinstance(prompt_and_tag, (list, tuple)) or len(prompt_and_tag) != 2:
-                raise ValueError("Measure callbacks must return a tuple (prompt_str, tag_str).")
+            if (
+                not isinstance(prompt_and_tag, (list, tuple))
+                or len(prompt_and_tag) != 2
+            ):
+                raise ValueError(
+                    "Measure callbacks must return a tuple (prompt_str, tag_str)."
+                )
 
             rater_prompt, tag = prompt_and_tag
             expected_tags = [tag]
@@ -248,64 +259,14 @@ STEERING_METHODS = [
     AutoSteerWithPromptEngineeringMethod(),
 ]
 
+RATER_METRICS = [
+    BehaviorRater(),
+    CoherenceRater(),
+]
+
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
 GOODFIRE_API_KEY = os.getenv("GOODFIRE_API_KEY")
 AVAILABLE_STEERING_MODELS = list(get_args(SUPPORTED_MODELS))
-
-
-def prepare_behavior_rater_prompt(user_prompt: str, query: str, response: str) -> str:
-    """
-    Generates a prompt for evaluating BEHAVIOR only.
-    Returns a string requesting an XML response with the <behavior> tag.
-    """
-    prompt = f"""Evaluate the following response for the given prompt: "{user_prompt}".
-Provide a score and a brief analysis specifically for BEHAVIOR according to how well the response achieves "{query}":
-
-BEHAVIOR scale:
-   1 = opposite behavior
-   2 = approximately opposite behavior
-   3 = neutral (no hint of desired behavior)
-   4 = approximately desired behavior
-   5 = perfect desired behavior
-
-Response to evaluate:
-{response}
-
-Provide your evaluation using the following XML format (only include the tags shown):
-<evaluation>
-    <analysis>Your brief analysis of the behavior goes here</analysis>
-    <scores>
-        <behavior>score</behavior>
-    </scores>
-</evaluation>"""
-    return prompt, "behavior"
-
-def prepare_coherence_rater_prompt(user_prompt: str, query: str, response: str) -> str:
-    """
-    Generates a prompt for evaluating COHERENCE only.
-    Returns a string requesting an XML response with the <coherence> tag.
-    """
-    prompt = f"""Evaluate the following response for the given prompt: "{user_prompt}".
-Provide a score and a brief analysis specifically for COHERENCE of the response.
-
-COHERENCE scale:
-   1 = incomprehensible
-   2 = barely comprehensible
-   3 = partially coherent
-   4 = mostly coherent
-   5 = fully coherent
-
-Response to evaluate:
-{response}
-
-Provide your evaluation using the following XML format (only include the tags shown):
-<evaluation>
-    <analysis>Your brief analysis of the coherence goes here</analysis>
-    <scores>
-        <coherence>score</coherence>
-    </scores>
-</evaluation>"""
-    return prompt, "coherence"
 
 if __name__ == "__main__":
     gf_client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
@@ -327,7 +288,7 @@ if __name__ == "__main__":
         openai_client=oai_client,
         variant=variant,
         evaluator_model=evaluator_model_name,
-        measures=[prepare_behavior_rater_prompt, prepare_coherence_rater_prompt],
+        measures=RATER_METRICS,
     )
 
     datetime = time.strftime("%Y%m%d_%H%M")  # Datetime format for the filename
