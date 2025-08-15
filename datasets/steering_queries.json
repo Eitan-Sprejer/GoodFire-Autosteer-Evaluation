@@ -3,18 +3,170 @@
         "description": "be funny",
         "topic_specific_prompts": [
             "Explain quantum physics",
-            "Give me a recipe for chocolate cake"
+            "Give me a recipe for chocolate cake",
+            "Tell me about the history of Rome",
+            "Explain the process of photosynthesis",
+            "Write an instruction manual for tying shoelaces",
+            "Describe how the stock market works",
+            "Explain gravity to a child",
+            "Write a condolence message",
+            "Discuss climate change impacts",
+            "Explain the concept of death to a child"
         ],
         "random_seed": 1,
-        "n_common_prompts": 1
+        "n_common_prompts": 20
     },
     {
         "description": "be professional and formal",
         "topic_specific_prompts": [
             "Write a cover letter for a job application",
-            "Draft a project status update"
+            "Draft a project status update",
+            "Provide feedback on an employee's performance",
+            "Write a business partnership proposal",
+            "Create a quarterly financial report",
+            "Draft a contract amendment",
+            "Write a letter of recommendation",
+            "Tell me a bedtime story",
+            "Write a casual tweet",
+            "Create a fun party invitation"
         ],
         "random_seed": 2,
-        "n_common_prompts": 1
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be more creative and imaginative",
+        "topic_specific_prompts": [
+            "Design a fictional creature",
+            "Create a new superhero origin story",
+            "Invent a new musical instrument",
+            "Design a city of the future",
+            "Create a new magical system",
+            "Invent a new form of transportation",
+            "Design an alien civilization",
+            "Explain how to do taxes",
+            "Write a technical manual",
+            "Create a legal document"
+        ],
+        "random_seed": 3,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be concise and direct",
+        "topic_specific_prompts": [
+            "How do I reset my password?",
+            "Give directions to the nearest hospital",
+            "What's the difference between RAM and ROM?",
+            "How to perform CPR?",
+            "Steps to change a flat tire",
+            "How to create a strong password",
+            "Emergency evacuation procedures",
+            "Describe your perfect day",
+            "Write a love poem",
+            "Create a fantasy story"
+        ],
+        "random_seed": 4,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be empathetic and supportive",
+        "topic_specific_prompts": [
+            "I failed my exam",
+            "I'm feeling overwhelmed at work",
+            "My pet passed away recently",
+            "I'm struggling with loneliness",
+            "I didn't get the job I wanted",
+            "I'm having relationship problems",
+            "I'm dealing with burnout",
+            "Debug this code snippet",
+            "Explain how blockchain works",
+            "Analyze this market trend"
+        ],
+        "random_seed": 5,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be educational and explain like a teacher",
+        "topic_specific_prompts": [
+            "How does the immune system work?",
+            "Explain multiplication to a child",
+            "What is climate change?",
+            "How do plants grow from seeds?",
+            "Why do we have seasons?",
+            "What causes thunder and lightning?",
+            "How do computers store information?",
+            "How do I make new friends?",
+            "Create a marketing slogan",
+            "Write a complaint letter"
+        ],
+        "random_seed": 6,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be skeptical and analytical",
+        "topic_specific_prompts": [
+            "Is this investment opportunity legitimate?",
+            "Evaluate this scientific claim",
+            "Review this research methodology",
+            "Analyze this conspiracy theory",
+            "Evaluate this product's marketing claims",
+            "Review this statistical analysis",
+            "Assess this historical account",
+            "Write a children's story",
+            "Create an inspirational quote",
+            "Write a birthday message"
+        ],
+        "random_seed": 7,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be motivational and inspiring",
+        "topic_specific_prompts": [
+            "I want to start exercising",
+            "I'm thinking of changing careers",
+            "I want to learn a new language",
+            "I'm starting a new business",
+            "I want to overcome my fears",
+            "I'm working on personal growth",
+            "I want to achieve my dreams",
+            "Explain how a CPU works",
+            "Debug this error message",
+            "Analyze this financial statement"
+        ],
+        "random_seed": 8,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be technical and detailed",
+        "topic_specific_prompts": [
+            "Explain how a quantum computer works",
+            "Describe the process of neural network training",
+            "How does a nuclear reactor generate power?",
+            "Explain CRISPR gene editing",
+            "How does public key cryptography work?",
+            "Describe TCP/IP protocol stack",
+            "Explain how SSDs store data",
+            "Write a children's bedtime story",
+            "Create a casual greeting",
+            "Write a love letter"
+        ],
+        "random_seed": 9,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be diplomatic and balanced",
+        "topic_specific_prompts": [
+            "Discuss pros and cons of social media",
+            "Evaluate different political systems",
+            "Compare competing technologies",
+            "Analyze controversial policy changes",
+            "Discuss environmental trade-offs",
+            "Compare educational approaches",
+            "Evaluate economic systems",
+            "Write a strong opinion piece",
+            "Create a passionate manifesto",
+            "Write a critical review"
+        ],
+        "random_seed": 10,
+        "n_common_prompts": 20
     }
 ]
