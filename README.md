@@ -1,89 +1,99 @@
-# Evaluating Feature Steering Using GoodFire's AutoSteer
+# GoodFire AutoSteer — Evaluation Suite
 
-An empirical evaluation of GoodFire's AutoSteer feature for controlling language model behavior through natural language specifications.
+This repository contains code and data to evaluate GoodFire's AutoSteer feature and several baseline steering techniques. The code exercises different steering methods, runs model queries, and uses an LLM-based rater to score responses on behavior and coherence.
 
-This is the github repository connected to the [blogpost](https://www.alignmentforum.org/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link) I wrote inside the Lesswrong community.
-## Overview
+## Current status
 
-This project evaluates the effectiveness of AutoSteer, a feature steering mechanism that automatically generates model's SAE feature's interventions based on natural language descriptions of desired behaviors. The evaluation focuses on testing AutoSteer's ability to reliably modify model outputs across different scenarios and model variants. For methodological details and results, see the following [blogpost](https://www.alignmentforum.org/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
+- The main entry point is `main.py` (interactive runner that orchestrates evaluations).
+- Core evaluation logic lives in the `goodfire_eval/` package:
+   - `goodfire_eval/steering_evaluator.py` — runs model calls and the rater pipeline.
+   - `goodfire_eval/steering_methods.py` — implementations of steering methods (Control, Prompting, AutoSteer, Agentic search, Combined, Scaled AutoSteer).
+   - `goodfire_eval/steering_dataset.py` — dataset loader for `datasets/common_prompts.json` and `datasets/steering_queries.json`.
+   - `goodfire_eval/metric_rater.py` — Behavior and Coherence raters used to evaluate responses.
+- Datasets are in the `datasets/` folder (JSON files with prompts and queries).
+- Results are saved as CSVs in the `results/` folder.
 
-## Project Structure
+## Project structure
+
+Top-level files and folders you will commonly use:
 
 ```
 .
-├── results/                      # Evaluation results and analysis
-│   ├── research.md               # Article that details the findings.
-│   ├── eval_gpt-4o-mini_var_llama-3.1_dt_20250116_1526.csv
-│   ├── eval_gpt-4o-mini_var_llama-3.3_dt_20250119_1134.csv
-│   └── eval_llama-3.3_var_llama-3.1_dt_20250116_1526.csv
-├── steering_methods.py           # Implementation of steering techniques
-├── steering_test_cases.py        # Test cases and evaluation scenarios
-├── eval.py                       # Main evaluation script
-└── analysis.ipynb                # Interactive results notebook
+├── main.py                        # Interactive runner to run evaluations
+├── requirements.txt               # Python dependencies
+├── datasets/                      # JSON datasets: common prompts and steering queries
+├── goodfire_eval/                 # Core evaluation package
+│   ├── steering_evaluator.py
+│   ├── steering_methods.py
+│   ├── steering_dataset.py
+│   └── metric_rater.py
+└── results/                       # CSV output from runs and plots
 ```
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- Python 3.10+ (the code uses modern typing and asyncio features). If you must use 3.8/3.9, some small edits may be required.
+- Install dependencies from `requirements.txt`.
 
-- Python 3.8+
-- Required packages listed in `requirements.txt`
+## Installation and quick run
 
-### Installation
+1. Create and activate a virtual environment:
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/goodfire-autosteer-evaluation.git
-cd goodfire-autosteer-evaluation
-```
-
-2. Create and activate a virtual environment:
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
+source .venv/bin/activate
 ```
 
-3. Install dependencies:
+2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
+3. Set required environment variables (export in shell or put them in a `.env` file):
 
-1. Set up your API keys in the `.env` file:
 ```bash
-OPENAI_API_KEY=your_openai_key_here
-GOODFIRE_API_KEY=your_goodfire_key_here
+export OPEN_AI_API_KEY=your_openai_key_here
+export GOODFIRE_API_KEY=your_goodfire_key_here
 ```
 
-2. Ensure your virtual environment is activated:
+Note: `main.py` expects environment variables named `OPEN_AI_API_KEY` and `GOODFIRE_API_KEY`.
+
+4. Run the interactive evaluator:
+
 ```bash
-source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
+python main.py
 ```
 
-3. Configure the evaluation parameters in `eval.py`:
-   - Set your variant model
-   - Set your evaluation model
-   - Adjust any other desired parameters
+When you run `main.py` it will:
+- Instantiate clients for GoodFire and OpenAI.
+- Ask you to select a variant model to evaluate.
+- Iterate over steering methods and queries, run model calls, and score responses.
+- Save results CSV files in `results/` with names like:
+   `results/eval_<evaluator>_var_<variant>_dt_<YYYYmmdd_HHMM>.csv`
 
-4. Run the evaluation:
-```bash
-python eval.py
-```
+## How evaluation works (high level)
 
-5. Analize the results:
-   - Go though the `analysis.ipynb notebook`, plotting the results of your different experiments.
+- Steering methods: implemented in `goodfire_eval/steering_methods.py`. The runner applies the steering method to a `goodfire.Variant` and then queries the model for a set of test prompts.
+- The rater: `goodfire_eval/metric_rater.py` defines raters (BehaviorRater, CoherenceRater) that build XML-style prompts the evaluator model (`gpt-4o-mini` by default in `main.py`) answers with scores and a short analysis. `steering_evaluator.py` parses those XML responses into numeric scores.
+- Data: `goodfire_eval/steering_dataset.py` assembles `SteeringQuery` objects from the JSON files in `datasets/` and creates the prompt message pairs that are sent to the model.
 
-### Customizing Your Experiment
+## Extending the project
 
-You can modify existing test cases or add new ones by editing `steering_test_cases.py`. The file is structured to make adding new test scenarios straightforward.
+- Add a new steering method: implement a subclass of `SteeringMethod` in `goodfire_eval/steering_methods.py` and add an instance to the `STEERING_METHODS` list in `main.py`.
+- Add a new metric rater: implement `MetricRater` in `goodfire_eval/metric_rater.py` (must return `(prompt_str, tag_str)` via `__call__`). Add the rater instance to `RATER_METRICS` in `main.py`.
+- Add new steering queries or common prompts: edit `datasets/steering_queries.json` and `datasets/common_prompts.json`.
 
-Likewise, you can add new steering methods inside the steering_methods.py notebook.
+## Notes and caveats
+
+- The code uses asynchronous clients (`goodfire.AsyncClient`, `openai.AsyncOpenAI`) and runs some pieces concurrently. Ensure your environment and installed client versions match the APIs used in `main.py` and `goodfire_eval/`.
+- `main.py` is interactive: it lists available steering variant models and expects a numeric selection.
+- Evaluation responses are parsed from XML-like text the rater model returns. If the rater's output structure changes, update `steering_evaluator.parse_evaluation_response` accordingly.
 
 ## Research Findings
 
-Detailed research findings and methodology are available in the following [blogpost](https://www.alignmentforum.org/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
+Detailed research findings and methodology can be found in the following [blog post](https://www.alignmentforum.org/posts/6dpKhtniqR3rnstnL/mind-the-coherence-gap-lessons-from-steering-llama-with-1?utm_campaign=post_share&utm_source=link).
 
 ## Contact
 
-Please, feel free to send me an email at eitusprejer@gmail.com if you have any questions. Feedback is more than welcome!
+If anything here is unclear or you want additional README sections (examples, CI, richer dev docs), feel free to email me at eitusprejer@gmail.com. Just let me know which areas to expand and I'll update the file.
