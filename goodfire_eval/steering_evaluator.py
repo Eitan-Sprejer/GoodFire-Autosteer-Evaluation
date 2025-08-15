@@ -1,30 +1,14 @@
 import asyncio
-import os
 import re
 import time
 from dataclasses import dataclass
-from typing import Tuple, List, Dict, Callable, Awaitable, Optional, get_args
+from typing import Tuple, List, Dict, Callable, Awaitable, Optional
 
 import openai
-import pandas as pd
-from dotenv import load_dotenv
-
 import goodfire as gf
-from goodfire.variants.variants import SUPPORTED_MODELS
-from steering_dataset import SteeringQuery, SteeringDataset
-from steering_methods import (
-    DoNothingMethod,
-    PromptEngineeringMethod,
-    AutoSteerMethod,
-    AgenticManualSearchMethod,
-    AutoSteerWithPromptEngineeringMethod,
-)
-from metric_rater import (
-    BehaviorRater,
-    CoherenceRater,
-)
+import pandas as pd
 
-load_dotenv()
+from goodfire_eval.steering_dataset import SteeringQuery
 
 
 @dataclass
@@ -39,7 +23,7 @@ class EvaluationResult:
     analysis: str
 
 
-class AutoSteerEvaluator:
+class SteeringEvaluator:
     def __init__(
         self,
         goodfire_client: gf.AsyncClient,
@@ -242,76 +226,3 @@ class AutoSteerEvaluator:
             data.append(row)
 
         return pd.DataFrame(data)
-
-
-def choose_model_variant():
-    for i, m in enumerate(AVAILABLE_STEERING_MODELS):
-        print(f"{i}: {m}")
-    choice = int(input("Select model variant index: "))
-    return AVAILABLE_STEERING_MODELS[choice]
-
-
-STEERING_METHODS = [
-    DoNothingMethod(),
-    PromptEngineeringMethod(),
-    AutoSteerMethod(),
-    AgenticManualSearchMethod(),
-    AutoSteerWithPromptEngineeringMethod(),
-]
-
-RATER_METRICS = [
-    BehaviorRater(),
-    CoherenceRater(),
-]
-
-OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
-GOODFIRE_API_KEY = os.getenv("GOODFIRE_API_KEY")
-AVAILABLE_STEERING_MODELS = list(get_args(SUPPORTED_MODELS))
-
-if __name__ == "__main__":
-    gf_client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
-    oai_client = openai.AsyncOpenAI(api_key=OPEN_AI_API_KEY)
-
-    variant_model_name = choose_model_variant()
-    variant = gf.Variant(base_model=variant_model_name)
-
-    evaluator_model_name = "gpt-4o-mini"
-
-    dataset = SteeringDataset(
-        common_prompts_path="datasets/common_prompts.json",
-        steering_queries_path="datasets/steering_queries.json",
-        system_prompt="You are a helpful assistant.",
-    )
-
-    evaluator = AutoSteerEvaluator(
-        goodfire_client=gf_client,
-        openai_client=oai_client,
-        variant=variant,
-        evaluator_model=evaluator_model_name,
-        measures=RATER_METRICS,
-    )
-
-    datetime = time.strftime("%Y%m%d_%H%M")  # Datetime format for the filename
-
-    results = []
-    for steering_method in STEERING_METHODS:
-        print(f"Evaluating steering method: {steering_method.name}")
-        for query in dataset.get_queries():
-            print(f"Query: {query.description}")
-            # Test steering method
-            results.append(
-                asyncio.run(
-                    evaluator.evaluate_steering_method(
-                        steering_query=query,
-                        steering_method=steering_method,
-                    )
-                )
-            )
-            # Make a DataFrame with the results
-            df = evaluator.aggregate_results(
-                [r for sublist in results for r in sublist]
-            )
-            df.to_csv(
-                f"results/eval_{evaluator_model_name}_var_{variant_model_name.split('/')[-1]}_dt_{datetime}.csv",
-                index=False,
-            )

@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from goodfire import AsyncClient, Variant
-from steering_dataset import SteeringQuery
+from goodfire_eval.steering_dataset import SteeringQuery
 
 
 def parse_steering_response(xml_string):
