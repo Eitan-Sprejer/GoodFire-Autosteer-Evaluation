@@ -167,7 +167,7 @@ class AutoSteerScaledMethod(SteeringMethod):
             specification=steering_query.description,
             model=variant,
         )
-        for i, (k, v) in enumerate(edits.as_dict().items()):
+        for k, v in edits.as_dict().items():
             edits.set(
                 k,
                 (
