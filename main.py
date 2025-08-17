@@ -61,10 +61,17 @@ if __name__ == "__main__":
 
     evaluator_model_name = "gpt-4o-mini"
 
+    system_prompt = (
+        "You are a helpful assistant.\n"
+        "First, think step-by-step inside <thinking>...</thinking> tags.\n"
+        "You MUST NOT write any reasoning outside the <thinking> block.\n"
+        "Then, give only the final answer inside <answer>...</answer> tags."
+    )
+
     dataset = SteeringDataset(
         common_prompts_path="datasets/common_prompts.json",
         steering_queries_path="datasets/steering_queries.json",
-        system_prompt="You are a helpful assistant.",
+        system_prompt=system_prompt,
     )
 
     evaluator = SteeringEvaluator(
