@@ -1,21 +1,56 @@
-from typing import List, Optional, Dict
+import string
+import random
+import re
+import json
+import logging
+from dataclasses import dataclass
+from typing import List, Optional, Dict, Union, Any
+
 from datasets import (
     load_dataset,
     get_dataset_config_names,
     Dataset,
     concatenate_datasets,
 )
-import string
-import random
-import re
-import logging
+
+from goodfire_eval.steering_dataset import SteeringDataset, SteeringQuery
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-import string
-import re
+@dataclass
+class SteeringClosedQuery(SteeringQuery):
+    """
+    Extension of SteeringQuery that also stores the correct answers.
+    """
+
+    answers: List[str]
+
+
+class SteeringClosedDataset(SteeringDataset):
+    """
+    Same as SteeringDataset but builds SteeringClosedQuery objects
+    with both prompts and answers.
+    """
+
+    def _build_queries(self) -> List[SteeringClosedQuery]:
+        """
+        Builds the list of SteeringClosedQuery objects from raw data.
+        Assumes `answers` key exists in the raw JSON for each item.
+        """
+        return [
+            SteeringClosedQuery(
+                description=item["description"],
+                test_prompt_messages=self.create_test_prompt_message_set(
+                    item["topic_specific_prompts"],
+                    n_common_prompts=item.get("n_common_prompts", 0),
+                    random_seed=item.get("random_seed", 42),
+                ),
+                answers=item.get("answers", []),
+            )
+            for item in self.raw_queries
+        ]
 
 
 class PromptUtils:
@@ -155,6 +190,63 @@ class MMLUDatasetLoader:
         combined = concatenate_datasets(datasets_list)
         return combined
 
+    @staticmethod
+    def save_as_json(dataset: Union[Dataset, Any], output_path: str) -> None:
+        """
+        Save a Hugging Face Dataset object to a JSON file.
+        """
+        logger.info("Saving dataset to JSON: %s", output_path)
+        try:
+            with open(output_path, "w", encoding="utf-8") as f:
+                if isinstance(dataset, Dataset):
+                    json.dump(dataset.to_dict(), f, indent=2, ensure_ascii=False)
+                else:
+                    json.dump(dataset, f, indent=2, ensure_ascii=False)
+            logger.info("Saved successfully.")
+        except Exception as e:
+            logger.exception("Failed to save dataset as JSON: %s", e)
+            raise
+
+    @staticmethod
+    def save_topic_specific_json(
+        dataset: Dataset,
+        descriptions: List[str],
+        num_prompts: int,
+        output_path: str,
+        random_seed: int = 1,
+    ) -> None:
+        """
+        Save a Hugging Face Dataset object to a JSON file with the SteeringDataset Format.
+
+        - descriptions: list of strings, each one will be a separate entry.
+        - num_prompts: number of random prompts to select for each description.
+        """
+        MMLUDatasetLoader.save_as_json(
+            [
+                {
+                    "description": description,
+                    "topic_specific_prompts": list(prompts),
+                    "answers": list(answers),
+                    "random_seed": random_seed,
+                    "n_common_prompts": 0,
+                }
+                for description in descriptions
+                for chosen_examples in [random.sample(list(dataset), k=num_prompts)]
+                for prompts, answers in [
+                    zip(
+                        *[
+                            (
+                                PromptUtils.build_cot_prompt(ex),
+                                string.ascii_uppercase[int(ex["answer"])],
+                            )
+                            for ex in chosen_examples
+                        ]
+                    )
+                ]
+            ],
+            output_path,
+        )
+
 
 if __name__ == "__main__":
     loader = MMLUDatasetLoader(categories=["all"], split="dev")
@@ -174,3 +266,35 @@ if __name__ == "__main__":
             "<thinking>2 + 2 = 4</thinking><answer>A</answer>"
         )
     )
+
+    ### STEERING CLOSED DATASET (MMLU)
+    from goodfire_eval.steering_dataset import SteeringDataset
+
+    random.seed(42)
+
+    MMLUDatasetLoader.save_as_json(combined, "mmlu.json")
+    dataset = SteeringDataset(
+        common_prompts_path="datasets/common_prompts.json",
+        steering_queries_path="datasets/steering_queries.json",
+        system_prompt="You are a helpful assistant.",
+    )
+    all_queries = dataset.get_queries()
+    loader.save_topic_specific_json(
+        dataset=combined,
+        output_path="datasets/steering_queries_mmlu.json",
+        descriptions=[item.description for item in all_queries],
+        num_prompts=10,
+        random_seed=42,
+    )
+    dataset = SteeringClosedDataset(
+        common_prompts_path="datasets/common_prompts.json",
+        steering_queries_path="datasets/steering_queries_mmlu.json",
+        system_prompt="You are a helpful assistant.",
+    )
+    all_queries = dataset.get_queries()
+    for i, query in enumerate(all_queries):
+        print(f"\n=== Steering Query {i+1}: {query.description} ===")
+        for j, message_pair in enumerate(query.test_prompt_messages[:5]):
+            user_prompt = message_pair[1]["content"]
+            print(f"  Prompt {j+1}: {user_prompt}")
+            print(f"  Answer {j+1}: {query.answers[j]}")
