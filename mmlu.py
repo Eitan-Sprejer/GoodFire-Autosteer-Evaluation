@@ -53,21 +53,25 @@ class SteeringClosedDataset(SteeringDataset):
             for item in self.raw_queries
         ]
 
+    def _evaluate_hit(self, pred: str, gold: str) -> str:
+        """Return evaluation label based on predicted and gold answers."""
+        if pred is None:
+            return "Miss (no <answer>)"
+        if gold is None:
+            return "Miss"
+        return "Hit" if pred.strip().upper()[0] == gold.strip().upper()[0] else "Miss"
+
     def evaluate_responses(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        Add evaluation columns to a DataFrame:
-        - predicted_answer from <answer>…</answer>
-        - gold_answer from correct dataset answer
-        - result: 'Hit' or type of 'Miss'
-
-        Args:
-            df: DataFrame with ['query', 'steering_method', 'response']
+        Add evaluation columns to a DataFrame containing at least ['query', 'steering_method', 'response'].
+        - predicted_answer: extracted from <answer> tags
+        - gold_answer: the correct answer from the dataset
+        - result: denotes if the prediction is a 'Hit' or identifies the type of 'Miss'.
         """
-        mapped_pred = {}
-        mapped_gold = {}
-        mapped_result = {}
+        df = df.copy()
+        df[["predicted_answer", "gold_answer", "result"]] = None
 
-        # dict para lookup por descripción
+        # dict for lookup by description
         queries_by_desc = {q.description: q for q in self.queries}
 
         for method in df["steering_method"].unique():
@@ -79,24 +83,9 @@ class SteeringClosedDataset(SteeringDataset):
                     parsed = PromptUtils.parse_cot_response(row.get("response", ""))
                     pred = parsed.get("answer")
                     gold = gold_answers[i] if i < len(gold_answers) else None
-                    if (
-                        pred is not None
-                        and gold is not None
-                        and pred.strip().upper()[0] == gold.strip().upper()[0]
-                    ):
-                        res = "Hit"
-                    elif pred is None:
-                        res = "Miss (no <answer>)"
-                    else:
-                        res = "Miss"
-                    mapped_pred[idx] = pred
-                    mapped_gold[idx] = gold
-                    mapped_result[idx] = res
-
-        df = df.copy()
-        df["predicted_answer"] = df.index.map(lambda ix: mapped_pred.get(ix))
-        df["gold_answer"] = df.index.map(lambda ix: mapped_gold.get(ix))
-        df["result"] = df.index.map(lambda ix: mapped_result.get(ix))
+                    res = self._evaluate_hit(pred, gold)
+                    df.loc[idx, 
+                           ["predicted_answer", "gold_answer", "result"]] = [pred, gold, res]  # fmt: skip
         return df
 
 
