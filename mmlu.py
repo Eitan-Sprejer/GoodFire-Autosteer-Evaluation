@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Union, Any
 
+import pandas as pd
 from datasets import (
     load_dataset,
     get_dataset_config_names,
@@ -51,6 +52,52 @@ class SteeringClosedDataset(SteeringDataset):
             )
             for item in self.raw_queries
         ]
+
+    def evaluate_responses(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Add evaluation columns to a DataFrame:
+        - predicted_answer from <answer>…</answer>
+        - gold_answer from correct dataset answer
+        - result: 'Hit' or type of 'Miss'
+
+        Args:
+            df: DataFrame with ['query', 'steering_method', 'response']
+        """
+        mapped_pred = {}
+        mapped_gold = {}
+        mapped_result = {}
+
+        # dict para lookup por descripción
+        queries_by_desc = {q.description: q for q in self.queries}
+
+        for method in df["steering_method"].unique():
+            df_method = df[df["steering_method"] == method]
+            for desc, group in df_method.groupby("query", sort=False):
+                query = queries_by_desc.get(desc)
+                gold_answers = query.answers if query else []
+                for i, (idx, row) in enumerate(group.iterrows()):
+                    parsed = PromptUtils.parse_cot_response(row.get("response", ""))
+                    pred = parsed.get("answer")
+                    gold = gold_answers[i] if i < len(gold_answers) else None
+                    if (
+                        pred is not None
+                        and gold is not None
+                        and pred.strip().upper()[0] == gold.strip().upper()[0]
+                    ):
+                        res = "Hit"
+                    elif pred is None:
+                        res = "Miss (no <answer>)"
+                    else:
+                        res = "Miss"
+                    mapped_pred[idx] = pred
+                    mapped_gold[idx] = gold
+                    mapped_result[idx] = res
+
+        df = df.copy()
+        df["predicted_answer"] = df.index.map(lambda ix: mapped_pred.get(ix))
+        df["gold_answer"] = df.index.map(lambda ix: mapped_gold.get(ix))
+        df["result"] = df.index.map(lambda ix: mapped_result.get(ix))
+        return df
 
 
 class PromptUtils:
@@ -272,20 +319,20 @@ if __name__ == "__main__":
 
     random.seed(42)
 
-    MMLUDatasetLoader.save_as_json(combined, "mmlu.json")
+    # MMLUDatasetLoader.save_as_json(combined, "mmlu.json")
     dataset = SteeringDataset(
         common_prompts_path="datasets/common_prompts.json",
         steering_queries_path="datasets/steering_queries.json",
         system_prompt="You are a helpful assistant.",
     )
     all_queries = dataset.get_queries()
-    loader.save_topic_specific_json(
-        dataset=combined,
-        output_path="datasets/steering_queries_mmlu.json",
-        descriptions=[item.description for item in all_queries],
-        num_prompts=10,
-        random_seed=42,
-    )
+    # loader.save_topic_specific_json(
+    #     dataset=combined,
+    #     output_path="datasets/steering_queries_mmlu.json",
+    #     descriptions=[item.description for item in all_queries],
+    #     num_prompts=10,
+    #     random_seed=42,
+    # )
     dataset = SteeringClosedDataset(
         common_prompts_path="datasets/common_prompts.json",
         steering_queries_path="datasets/steering_queries_mmlu.json",
@@ -298,3 +345,12 @@ if __name__ == "__main__":
             user_prompt = message_pair[1]["content"]
             print(f"  Prompt {j+1}: {user_prompt}")
             print(f"  Answer {j+1}: {query.answers[j]}")
+    df = pd.read_csv(
+        "results/eval_gpt-4o-mini_var_Meta-Llama-3.1-8B-Instruct_dt_20250819_1641.csv"
+    )
+    df_eval = dataset.evaluate_responses(df)
+    print(
+        df_eval[
+            ["query", "steering_method", "predicted_answer", "gold_answer", "result"]
+        ].head(20)
+    )
