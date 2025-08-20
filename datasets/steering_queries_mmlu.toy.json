@@ -1,0 +1,28 @@
+[
+  {
+    "description": "be funny",
+    "topic_specific_prompts": [
+      "In a 2 pole lap winding dc machine , the resistance of one conductor is 2Ω and total number of conductors is 100. Find the total resistance\nA. 200Ω\nB. 100Ω\nC. 50Ω\nD. 10Ω\n\nThis is a Chain-of-Thought (CoT) task.\nFirst, think step-by-step inside <thinking>...</thinking> tags.\nYou MUST NOT write any reasoning outside the <thinking> block.\nThen, give only the final answer — a single letter (A, B, C, ...) — inside <answer>...</answer> tags.",
+      "The complex question fallacy consists of\nA. arguing something is inferior just because it doesn't do something it was never intended to do.\nB. including more than one claim in the proposition and treating proof for one claim as proof for all the claims.\nC. drawing a conclusion before examining the evidence, and only considering evidence that supports that conclusion.\nD. asking a question that includes either an unproven assumption or more than one question, thus making a straightforward yes or no answer meaningless.\n\nThis is a Chain-of-Thought (CoT) task.\nFirst, think step-by-step inside <thinking>...</thinking> tags.\nYou MUST NOT write any reasoning outside the <thinking> block.\nThen, give only the final answer — a single letter (A, B, C, ...) — inside <answer>...</answer> tags."
+    ],
+    "answers": [
+      "C",
+      "D"
+    ],
+    "random_seed": 42,
+    "n_common_prompts": 0
+  },
+  {
+    "description": "be professional and formal",
+    "topic_specific_prompts": [
+      "What would be then consequences for the OLS estimator if heteroscedasticity is present in a regression model but ignored?\nA. It will be biased\nB. It will be inconsistent\nC. It will be inefficient\nD. All of (a), (b) and (c) will be true.\n\nThis is a Chain-of-Thought (CoT) task.\nFirst, think step-by-step inside <thinking>...</thinking> tags.\nYou MUST NOT write any reasoning outside the <thinking> block.\nThen, give only the final answer — a single letter (A, B, C, ...) — inside <answer>...</answer> tags.",
+      "Recent research on hominid species dating from the Middle Pliocene indicates there was (as of 2020):\nA. a great amount of species diversity, or a single species that exhibited a lot of diversity.\nB. very little species diversity during this period and very few hominids.\nC. decreased species diversity due to a prolonged ice age followed by a severe drought.\nD. decreased species diversity but increased numbers of hammerstones and flakes, indicating stone tool manufacture.\n\nThis is a Chain-of-Thought (CoT) task.\nFirst, think step-by-step inside <thinking>...</thinking> tags.\nYou MUST NOT write any reasoning outside the <thinking> block.\nThen, give only the final answer — a single letter (A, B, C, ...) — inside <answer>...</answer> tags."
+    ],
+    "answers": [
+      "C",
+      "A"
+    ],
+    "random_seed": 42,
+    "n_common_prompts": 0
+  }
+]

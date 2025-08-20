@@ -159,6 +159,7 @@ class AutoSteerScaledMethod(SteeringMethod):
     def __init__(self, intensity: float = 0.5, keep_sign: bool = True):
         self.intensity = intensity
         self.keep_sign = keep_sign
+        self.name += f" ({intensity:.2f})"
 
     async def apply(
         self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
