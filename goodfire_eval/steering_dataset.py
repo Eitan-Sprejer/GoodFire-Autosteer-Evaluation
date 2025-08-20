@@ -32,7 +32,7 @@ class SteeringDataset:
     def _load_json(path: str):
         path = Path(path)
         if not path.exists():
-            raise FileNotFoundError(f"No se encontró el archivo: {path}")
+            raise FileNotFoundError(f"File not found: {path}")
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
 

@@ -1,6 +1,7 @@
 import asyncio
 import os
 import time
+import logging
 from typing import get_args
 
 import openai
@@ -34,6 +35,15 @@ def choose_model_variant():
 load_dotenv()
 os.makedirs("results", exist_ok=True)
 
+datetime = time.strftime("%Y%m%d_%H%M")
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    filename=f"{datetime}.log",
+    filemode="a",
+    encoding="utf-8",
+)
 
 STEERING_METHODS = [
     DoNothingMethod(),
@@ -42,6 +52,11 @@ STEERING_METHODS = [
     AgenticManualSearchMethod(),
     AutoSteerWithPromptEngineeringMethod(),
 ]
+
+# from goodfire_eval.steering_methods import AutoSteerScaledMethod
+# import numpy as np
+# intensities = np.linspace(0, 1, 10)  # uniformly distributed values
+# STEERING_METHODS = [AutoSteerScaledMethod(intensity=i) for i in intensities]
 
 RATER_METRICS = [
     BehaviorRater(),
@@ -61,10 +76,17 @@ if __name__ == "__main__":
 
     evaluator_model_name = "gpt-4o-mini"
 
+    system_prompt = (
+        "You are a helpful assistant.\n"
+        "First, think step-by-step inside <thinking>...</thinking> tags.\n"
+        "You MUST NOT write any reasoning outside the <thinking> block.\n"
+        "Then, give only the final answer inside <answer>...</answer> tags."
+    )
+
     dataset = SteeringDataset(
         common_prompts_path="datasets/common_prompts.json",
         steering_queries_path="datasets/steering_queries.json",
-        system_prompt="You are a helpful assistant.",
+        system_prompt=system_prompt,
     )
 
     evaluator = SteeringEvaluator(
@@ -74,8 +96,6 @@ if __name__ == "__main__":
         evaluator_model=evaluator_model_name,
         measures=RATER_METRICS,
     )
-
-    datetime = time.strftime("%Y%m%d_%H%M")  # Datetime format for the filename
 
     results = []
     for steering_method in STEERING_METHODS:

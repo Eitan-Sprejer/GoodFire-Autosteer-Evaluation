@@ -1,0 +1,20 @@
+[
+    {
+        "description": "be funny",
+        "topic_specific_prompts": [
+            "Explain quantum physics",
+            "Give me a recipe for chocolate cake"
+        ],
+        "random_seed": 1,
+        "n_common_prompts": 1
+    },
+    {
+        "description": "be professional and formal",
+        "topic_specific_prompts": [
+            "Write a cover letter for a job application",
+            "Draft a project status update"
+        ],
+        "random_seed": 2,
+        "n_common_prompts": 1
+    }
+]
