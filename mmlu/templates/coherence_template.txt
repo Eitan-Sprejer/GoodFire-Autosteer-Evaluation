@@ -1,0 +1,14 @@
+You will be given a prompt and a corresponding response. Your task is to rate the coherence of the response on a 5-point Likert scale, using the definitions provided for each scale point in the rubrics. Base your judgment exclusively on these rubric definitions, without adding or inferring additional criteria. Evaluate only the coherence of the response as defined in the rubrics, and ignore all other aspects of the text unless explicitly included in the rubric for a given score. In your answer, return only the number corresponding to the scale point you chose.
+
+Rubrics:
+1: There is no response or the test-taker is not responsive to the prompt in good faith, e.g., the test taker repeats the prompt but does not respond to it, or the the test taker intentionally goes off-task in some way to “trick” the system, for example, by writing random words, strings of letters, or giving a memorized/plagiarized off-topic response.
+2: The response has minimal coherence: (1) it is possible to discern some relevant ideas, though the overall purpose of the response may be incoherent and the lexical/grammatical choices lead to breakdowns in coherence; (2) there is limited evidence of organizational features, and when used, such features may be inaccurate and lead to breakdowns in coherence; (3) the response lacks an overall structure appropriate for the task and ideas are not clearly presented or arranged.
+3: The response has variable coherence: (1) the reader can generally follow the overall purpose and the main points, though lexical/grammatical choices impact coherence at times; (2) the response demonstrates some organization, though the use of referencing and cohesive devices may be inaccurate and the overall progression may be unclear; (3) the response contains evidence of some structure appropriate for the task, though topics are not always developed, clearly distinct or connected. The discoursal features are somewhat effective in conveying the intended message.
+4: The response is mostly coherent: (1) the ideas and purpose of the response are clear, and lexical/grammatical choices generally do not impact coherence though they may lead to some instances of confusion; the response has a clear progression and ideas are linked using a range of discoursal features; (3) the response is well-structured for the task, with topics appropriately introduced, developed, and concluded. The discoursal features allow the reader to follow along easily.
+5: The response is highly coherent: (1) the ideas and purpose of the response are completely clear; (2) the response is smoothly-flowing, with a clear sequence of ideas which are cohesively linked using a range of discoursal features; (3) the response is logically and appropriately structured for the task, with topics effectively developed and expertly connected. The discoursal features are completely natural for the reader.
+
+Prompt:
+$PROMPT
+
+Response:
+$RESPONSE

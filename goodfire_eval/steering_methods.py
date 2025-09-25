@@ -3,6 +3,7 @@ import re
 from abc import ABC, abstractmethod
 from typing import Optional
 
+import goodfire
 from goodfire import AsyncClient, Variant
 from goodfire_eval.steering_dataset import SteeringQuery
 
@@ -82,11 +83,14 @@ class AutoSteerMethod(SteeringMethod):
         """
         Use GoodFire's AutoSteer (async) to obtain FeatureEdits and apply them to variant.
         """
-        edits = await client.features.AutoSteer(
-            specification=steering_query.description,
-            model=variant,
-        )
-        variant.set(edits)
+        try:
+            edits = await client.features.AutoSteer(
+                specification=steering_query.description,
+                model=variant,
+            )
+            variant.set(edits)
+        except goodfire.api.exceptions.RequestFailedException as e:
+            print(f"GoodFire Server Error: {e}")
         return steering_query
 
 

@@ -1,4 +1,5 @@
 import asyncio
+import sys
 import os
 import time
 import logging
@@ -24,8 +25,14 @@ from goodfire_eval.metric_rater import (
     CoherenceRater,
 )
 
+from mmlu.steering_closed_dataset import SteeringClosedDataset
+from mmlu.rater_behavior import BehaviorRater
+from mmlu.rater_coherence import CoherenceRater
 
-def choose_model_variant():
+
+def choose_model_variant(choice=None):
+    if choice is not None:
+        return AVAILABLE_STEERING_MODELS[choice]
     for i, m in enumerate(AVAILABLE_STEERING_MODELS):
         print(f"{i}: {m}")
     choice = int(input("Select model variant index: "))
@@ -59,8 +66,11 @@ STEERING_METHODS = [
 # STEERING_METHODS = [AutoSteerScaledMethod(intensity=i) for i in intensities]
 
 RATER_METRICS = [
-    BehaviorRater(),
-    CoherenceRater(),
+    BehaviorRater(
+        template_path="mmlu/templates/behavior_template.txt",
+        criteria_path="mmlu/data/behavior_criteria.json",
+    ),
+    CoherenceRater("mmlu/templates/coherence_template.txt"),
 ]
 
 OPEN_AI_API_KEY = os.getenv("OPEN_AI_API_KEY")
@@ -71,7 +81,9 @@ if __name__ == "__main__":
     gf_client = gf.AsyncClient(api_key=GOODFIRE_API_KEY)
     oai_client = openai.AsyncOpenAI(api_key=OPEN_AI_API_KEY)
 
-    variant_model_name = choose_model_variant()
+    variant_model_name = choose_model_variant(
+        int(sys.argv[1]) if len(sys.argv) > 1 else None
+    )
     variant = gf.Variant(base_model=variant_model_name)
 
     evaluator_model_name = "gpt-4o-mini"
@@ -83,9 +95,9 @@ if __name__ == "__main__":
         "Then, give only the final answer inside <answer>...</answer> tags."
     )
 
-    dataset = SteeringDataset(
+    dataset = SteeringClosedDataset(
         common_prompts_path="datasets/common_prompts.json",
-        steering_queries_path="datasets/steering_queries.json",
+        steering_queries_path="datasets/steering_queries_mmlu.json",
         system_prompt=system_prompt,
     )
 
@@ -99,9 +111,9 @@ if __name__ == "__main__":
 
     results = []
     for steering_method in STEERING_METHODS:
-        print(f"Evaluating steering method: {steering_method.name}")
+        print(f"Evaluating steering method: {steering_method.name}", flush=True)
         for query in dataset.get_queries():
-            print(f"Query: {query.description}")
+            print(f"Query: {query.description}", flush=True)
             # Test steering method
             results.append(
                 asyncio.run(
