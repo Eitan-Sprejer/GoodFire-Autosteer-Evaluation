@@ -59,7 +59,7 @@ if __name__ == "__main__":
             print(f"  Prompt {j+1}: {user_prompt}")
             print(f"  Answer {j+1}: {query.answers[j]}")
     filename_no_ext = (
-        "eval_gpt-4o-mini_var_Llama-3.3-70B-Instruct_dt_20250925_1548_merged"
+        "eval_gpt-4o-mini_var_Llama-3.3-70B-Instruct_dt_20250925_1548"
     )
     df = pd.read_csv(f"results/{filename_no_ext}.csv")
     df_eval = dataset.evaluate_responses(df)
