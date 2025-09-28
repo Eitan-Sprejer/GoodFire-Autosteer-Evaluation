@@ -1,5 +1,6 @@
 import math
 import re
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -76,6 +77,7 @@ class PromptEngineeringMethod(SteeringMethod):
 
 class AutoSteerMethod(SteeringMethod):
     name = "Auto Steer"
+    max_retries = 8
 
     async def apply(
         self, client: AsyncClient, variant: Variant, steering_query: SteeringQuery
@@ -83,14 +85,25 @@ class AutoSteerMethod(SteeringMethod):
         """
         Use GoodFire's AutoSteer (async) to obtain FeatureEdits and apply them to variant.
         """
-        try:
-            edits = await client.features.AutoSteer(
-                specification=steering_query.description,
-                model=variant,
-            )
-            variant.set(edits)
-        except goodfire.api.exceptions.RequestFailedException as e:
-            print(f"GoodFire Server Error: {e}")
+        backoff = 1
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                edits = await client.features.AutoSteer(
+                    specification=steering_query.description,
+                    model=variant,
+                )
+                variant.set(edits)
+                break
+            except goodfire.api.exceptions.ServerErrorException as e:
+                if attempt == self.max_retries:
+                    raise
+                print(
+                    f"GoodFire Server Error (attempt {attempt}/{self.max_retries}), retrying in {backoff}s..."
+                )
+                await asyncio.sleep(backoff)
+                backoff *= 2
+            except goodfire.api.exceptions.RequestFailedException as e:
+                print(f"GoodFire Request Error: {e}. Using unmodified model.")
         return steering_query
 
 

@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     random.seed(42)
 
-    # MMLUDataset.save_as_json(combined, "mmlu.json")
+    # MMLUDataset.save_as_json(combined, "datasets/mmlu.json")
     dataset = SteeringDataset(
         common_prompts_path="datasets/common_prompts.json",
         steering_queries_path="datasets/steering_queries.json",
