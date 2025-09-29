@@ -1,5 +1,4 @@
 import asyncio
-import httpx
 import re
 import time
 from dataclasses import dataclass
@@ -119,7 +118,8 @@ class SteeringEvaluator:
                     if attempt == self.max_retries:
                         raise
                     print(
-                        f"Rate limit hit for tag '{tag}' (attempt {attempt}/{self.max_retries}), retrying in {backoff}s..."
+                        f"Rate limit hit for tag '{tag}' (attempt {attempt}/{self.max_retries}), "
+                        f"retrying in {backoff}s..."
                     )
                     await asyncio.sleep(backoff)
                     backoff *= 2
@@ -164,15 +164,12 @@ class SteeringEvaluator:
                     messages=message, model=self.variant
                 )
                 break
-            except (
-                gf.api.exceptions.ServerErrorException,
-                httpx.RemoteProtocolError,
-                httpx.ConnectTimeout,
-            ) as e:
+            except gf.api.exceptions.ServerErrorException as e:
                 if attempt == self.max_retries:
                     raise
                 print(
-                    f"GoodFire Server/Connection Error (attempt {attempt}/{self.max_retries}), retrying in {backoff}s..."
+                    f"GoodFire Server Error (attempt {attempt}/{self.max_retries}), "
+                    f"retrying in {backoff}s..."
                 )
                 await asyncio.sleep(backoff)
                 backoff *= 2
@@ -194,16 +191,30 @@ class SteeringEvaluator:
         steering_method: Callable[[str, any], Awaitable[None]],
     ) -> List[EvaluationResult]:
         """Evaluates any steering method across multiple test prompts concurrently."""
-
-        tic = time.time()
-        # Apply the steering method (AutoSteer or any other method)
-        steering_query = await steering_method(
-            client=self.goodfire_client,
-            variant=self.variant,
-            steering_query=steering_query,
-        )
-        toc = time.time()
-        time_taken = toc - tic
+        backoff = 1
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                tic = time.perf_counter()
+                # Apply the steering method (AutoSteer or any other method)
+                steering_query = await steering_method(
+                    client=self.goodfire_client,
+                    variant=self.variant,
+                    steering_query=steering_query,
+                )
+                toc = time.perf_counter()
+                time_taken = toc - tic
+                break
+            except gf.api.exceptions.ServerErrorException as e:
+                if attempt == self.max_retries:
+                    raise
+                print(
+                    f"GoodFire Server Error (attempt {attempt}/{self.max_retries}), "
+                    f"retrying in {backoff}s..."
+                )
+                await asyncio.sleep(backoff)
+                backoff *= 2
+            except gf.api.exceptions.RequestFailedException as e:
+                print(f"GoodFire Request Error: {e}. Using unmodified model.")
 
         # Create tasks for all prompts
         tasks = [
