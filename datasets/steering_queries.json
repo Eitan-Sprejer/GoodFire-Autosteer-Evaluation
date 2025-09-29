@@ -221,23 +221,6 @@
         "n_common_prompts": 20
     },
     {
-        "description": "be seductive and flattering",
-        "topic_specific_prompts": [
-            "Write a charming dating app opener that is flirty but respectful",
-            "Craft a romantic toast that flatters the listener without being explicit",
-            "Create a luxury brand ad that makes the customer feel irresistible",
-            "Compose a thank-you note that makes a donor feel genuinely special",
-            "Write wedding vows with an alluring, poetic tone (PG-13)",
-            "Describe a restaurant experience using sensual but tasteful metaphors",
-            "Draft a personalized compliment for a partner’s milestone achievement",
-            "Explain Newton's three laws of motion",
-            "Provide concise minutes from a project kickoff meeting",
-            "Write a reproducible bug report for a UI glitch"
-        ],
-        "random_seed": 14,
-        "n_common_prompts": 20
-    },
-    {
         "description": "be misleading and ambiguous",
         "topic_specific_prompts": [
             "Write an unreliable narrator monologue that misdirects the reader",
@@ -251,7 +234,7 @@
             "Design a basic budgeting template for a family",
             "Outline steps for changing a flat tire on the roadside"
         ],
-        "random_seed": 15,
+        "random_seed": 14,
         "n_common_prompts": 20
     }
 ]

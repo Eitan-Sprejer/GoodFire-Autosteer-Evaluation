@@ -43,7 +43,7 @@ if __name__ == "__main__":
     #     dataset=combined,
     #     output_path="datasets/steering_queries_mmlu.json",
     #     descriptions=[item.description for item in all_queries],
-    #     num_prompts=30,
+    #     num_prompts=3,
     #     random_seed=42,
     # )
     dataset = SteeringClosedDataset(
@@ -59,7 +59,7 @@ if __name__ == "__main__":
             print(f"  Prompt {j+1}: {user_prompt}")
             print(f"  Answer {j+1}: {query.answers[j]}")
     filename_no_ext = (
-        "eval_gpt-4o-mini_var_Llama-3.3-70B-Instruct_dt_20250925_1548"
+        "eval_gpt-4o-mini_var_Llama-3.3-70B-Instruct_dt_20250929_1404"
     )
     df = pd.read_csv(f"results/{filename_no_ext}.csv")
     df_eval = dataset.evaluate_responses(df)

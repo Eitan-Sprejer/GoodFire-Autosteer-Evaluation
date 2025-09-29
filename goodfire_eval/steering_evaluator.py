@@ -1,4 +1,5 @@
 import asyncio
+import httpx
 import re
 import time
 from dataclasses import dataclass
@@ -156,13 +157,28 @@ class SteeringEvaluator:
         message: list[dict],
     ) -> Optional[EvaluationResult]:
         """Evaluates a single prompt and returns the result."""
-        try:
-            response = await self.goodfire_client.chat.completions.create(
-                messages=message, model=self.variant
-            )
-        except gf.api.exceptions.ServerErrorException as e:
-            print(f"GoodFire Server Error: {e}. Returning None.")
-            return None
+        backoff = 1
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                response = await self.goodfire_client.chat.completions.create(
+                    messages=message, model=self.variant
+                )
+                break
+            except (
+                gf.api.exceptions.ServerErrorException,
+                httpx.RemoteProtocolError,
+                httpx.ConnectTimeout,
+            ) as e:
+                if attempt == self.max_retries:
+                    raise
+                print(
+                    f"GoodFire Server/Connection Error (attempt {attempt}/{self.max_retries}), retrying in {backoff}s..."
+                )
+                await asyncio.sleep(backoff)
+                backoff *= 2
+            except gf.api.exceptions.RequestFailedException as e:
+                print(f"GoodFire Request Error: {e}. Returning None.")
+                return None
 
         return await self.evaluate_response(
             query=query,

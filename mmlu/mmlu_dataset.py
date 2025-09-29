@@ -139,10 +139,10 @@ class MMLUDataset:
         random_seed: int = 1,
     ) -> None:
         """
-        Save a Hugging Face Dataset object to a JSON file with the SteeringDataset Format.
+        Save a Hugging Face Dataset object to a JSON file with the SteeringDataset format.
 
         - descriptions: list of strings, each one will be a separate entry.
-        - num_prompts: number of random prompts to select for each description.
+        - num_prompts: number of examples per subject (deterministic top-k).
         """
         MMLUDataset.save_as_json(
             [
@@ -150,17 +150,29 @@ class MMLUDataset:
                     "description": description,
                     "topic_specific_prompts": list(prompts),
                     "answers": list(answers),
+                    "subjects": list(subjects),
                     "random_seed": random_seed,
                     "n_common_prompts": 0,
                 }
                 for description in descriptions
-                for chosen_examples in [random.sample(list(dataset), k=num_prompts)]
-                for prompts, answers in [
+                for subj_order in [list(dict.fromkeys(dataset["subject"]))]
+                for chosen_examples in [
+                    [
+                        ex
+                        for s in subj_order
+                        for subset in [dataset.filter(lambda e: e["subject"] == s)]
+                        for ex in list(
+                            subset.select(range(min(num_prompts, len(subset))))
+                        )
+                    ]
+                ]
+                for prompts, answers, subjects in [
                     zip(
                         *[
                             (
                                 PromptUtils.build_cot_prompt(ex),
                                 string.ascii_uppercase[int(ex["answer"])],
+                                ex["subject"],
                             )
                             for ex in chosen_examples
                         ]

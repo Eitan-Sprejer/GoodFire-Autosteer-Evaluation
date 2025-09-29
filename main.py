@@ -56,7 +56,7 @@ STEERING_METHODS = [
     DoNothingMethod(),
     PromptEngineeringMethod(),
     AutoSteerMethod(),
-    AgenticManualSearchMethod(),
+    # AgenticManualSearchMethod(),
     AutoSteerWithPromptEngineeringMethod(),
 ]
 
