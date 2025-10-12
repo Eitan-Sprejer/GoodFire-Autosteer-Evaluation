@@ -1,0 +1,37 @@
+Comparison,Mean 1,Mean 2,Diff,t-statistic,p-value,Significant,Cohen's d,n1,n2,Model,Metric
+Control vs Simple Prompting,0.8546,0.8688,-0.0142,-1.4235,0.154651,,-0.0411,2394,2394,Llama-3.3-70B,Accuracy
+Control vs Auto Steer,0.8546,0.7342,0.1204,10.4221,0.000000,***,0.3013,2394,2393,Llama-3.3-70B,Accuracy
+Control vs Combined Approach,0.8546,0.7902,0.0644,5.8508,0.000000,***,0.1691,2394,2393,Llama-3.3-70B,Accuracy
+Simple Prompting vs Auto Steer,0.8688,0.7342,0.1346,11.8435,0.000000,***,0.3424,2394,2393,Llama-3.3-70B,Accuracy
+Simple Prompting vs Combined Approach,0.8688,0.7902,0.0786,7.2708,0.000000,***,0.2102,2394,2393,Llama-3.3-70B,Accuracy
+Auto Steer vs Combined Approach,0.7342,0.7902,-0.0560,-4.5587,0.000005,***,-0.1318,2393,2393,Llama-3.3-70B,Accuracy
+Control vs Simple Prompting,3.0894,3.1082,-0.0188,-0.3689,0.712255,,-0.0107,2394,2394,Llama-3.3-70B,Behavior
+Control vs Auto Steer,3.0894,3.5708,-0.4814,-10.0356,0.000000,***,-0.2901,2394,2393,Llama-3.3-70B,Behavior
+Control vs Combined Approach,3.0894,3.3326,-0.2432,-4.9433,0.000001,***,-0.1429,2394,2393,Llama-3.3-70B,Behavior
+Simple Prompting vs Auto Steer,3.1082,3.5708,-0.4626,-9.6379,0.000000,***,-0.2786,2394,2393,Llama-3.3-70B,Behavior
+Simple Prompting vs Combined Approach,3.1082,3.3326,-0.2244,-4.5586,0.000005,***,-0.1318,2394,2393,Llama-3.3-70B,Behavior
+Auto Steer vs Combined Approach,3.5708,3.3326,0.2382,5.1630,0.000000,***,0.1493,2393,2393,Llama-3.3-70B,Behavior
+Control vs Simple Prompting,4.9453,4.9453,0.0000,0.0000,1.000000,,0.0000,2394,2394,Llama-3.3-70B,Coherence
+Control vs Auto Steer,4.9453,3.8939,1.0514,33.7403,0.000000,***,0.9753,2394,2393,Llama-3.3-70B,Coherence
+Control vs Combined Approach,4.9453,4.4129,0.5324,23.1688,0.000000,***,0.6697,2394,2393,Llama-3.3-70B,Coherence
+Simple Prompting vs Auto Steer,4.9453,3.8939,1.0514,33.6677,0.000000,***,0.9732,2394,2393,Llama-3.3-70B,Coherence
+Simple Prompting vs Combined Approach,4.9453,4.4129,0.5324,23.0774,0.000000,***,0.6671,2394,2393,Llama-3.3-70B,Coherence
+Auto Steer vs Combined Approach,3.8939,4.4129,-0.5190,-13.6191,0.000000,***,-0.3937,2393,2393,Llama-3.3-70B,Coherence
+Control vs Simple Prompting,0.6415,0.6625,-0.0210,-1.5277,0.126647,,-0.0442,2393,2394,Llama-3.1-8B,Accuracy
+Control vs Auto Steer,0.6415,0.4628,0.1787,12.6293,0.000000,***,0.3651,2393,2392,Llama-3.1-8B,Accuracy
+Control vs Combined Approach,0.6415,0.5295,0.1120,7.9131,0.000000,***,0.2288,2393,2393,Llama-3.1-8B,Accuracy
+Simple Prompting vs Auto Steer,0.6625,0.4628,0.1997,14.2131,0.000000,***,0.4109,2394,2392,Llama-3.1-8B,Accuracy
+Simple Prompting vs Combined Approach,0.6625,0.5295,0.1330,9.4638,0.000000,***,0.2736,2394,2393,Llama-3.1-8B,Accuracy
+Auto Steer vs Combined Approach,0.4628,0.5295,-0.0667,-4.6211,0.000004,***,-0.1336,2392,2393,Llama-3.1-8B,Accuracy
+Control vs Simple Prompting,2.7823,2.9808,-0.1985,-4.2486,0.000022,***,-0.1228,2393,2394,Llama-3.1-8B,Behavior
+Control vs Auto Steer,2.7823,3.3378,-0.5555,-12.0428,0.000000,***,-0.3482,2393,2392,Llama-3.1-8B,Behavior
+Control vs Combined Approach,2.7823,3.8600,-1.0777,-24.5716,0.000000,***,-0.7104,2393,2393,Llama-3.1-8B,Behavior
+Simple Prompting vs Auto Steer,2.9808,3.3378,-0.3570,-7.6153,0.000000,***,-0.2202,2394,2392,Llama-3.1-8B,Behavior
+Simple Prompting vs Combined Approach,2.9808,3.8600,-0.8792,-19.6907,0.000000,***,-0.5692,2394,2393,Llama-3.1-8B,Behavior
+Auto Steer vs Combined Approach,3.3378,3.8600,-0.5222,-11.8610,0.000000,***,-0.3429,2392,2393,Llama-3.1-8B,Behavior
+Control vs Simple Prompting,4.5683,4.6249,-0.0566,-2.4290,0.015178,,-0.0702,2393,2394,Llama-3.1-8B,Coherence
+Control vs Auto Steer,4.5683,2.2412,2.3271,71.3124,0.000000,***,2.0618,2393,2392,Llama-3.1-8B,Coherence
+Control vs Combined Approach,4.5683,2.5236,2.0447,61.2455,0.000000,***,1.7706,2393,2393,Llama-3.1-8B,Coherence
+Simple Prompting vs Auto Steer,4.6249,2.2412,2.3837,74.1896,0.000000,***,2.1448,2394,2392,Llama-3.1-8B,Coherence
+Simple Prompting vs Combined Approach,4.6249,2.5236,2.1013,63.8807,0.000000,***,1.8466,2394,2393,Llama-3.1-8B,Coherence
+Auto Steer vs Combined Approach,2.2412,2.5236,-0.2824,-7.0489,0.000000,***,-0.2038,2392,2393,Llama-3.1-8B,Coherence
