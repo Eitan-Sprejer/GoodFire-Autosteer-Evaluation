@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     random.seed(42)
 
-    # MMLUDataset.save_as_json(combined, "mmlu.json")
+    # MMLUDataset.save_as_json(combined, "datasets/mmlu.json")
     dataset = SteeringDataset(
         common_prompts_path="datasets/common_prompts.json",
         steering_queries_path="datasets/steering_queries.json",
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     #     dataset=combined,
     #     output_path="datasets/steering_queries_mmlu.json",
     #     descriptions=[item.description for item in all_queries],
-    #     num_prompts=10,
+    #     num_prompts=3,
     #     random_seed=42,
     # )
     dataset = SteeringClosedDataset(
@@ -58,9 +58,10 @@ if __name__ == "__main__":
             user_prompt = message_pair[1]["content"]
             print(f"  Prompt {j+1}: {user_prompt}")
             print(f"  Answer {j+1}: {query.answers[j]}")
-    df = pd.read_csv(
-        "results/eval_gpt-4o-mini_var_Meta-Llama-3.1-8B-Instruct_dt_20250819_1641.csv"
+    filename_no_ext = (
+        "eval_gpt-4o-mini_var_Llama-3.3-70B-Instruct_dt_20250929_1404"
     )
+    df = pd.read_csv(f"results/{filename_no_ext}.csv")
     df_eval = dataset.evaluate_responses(df)
     print(
         df_eval[
@@ -68,6 +69,6 @@ if __name__ == "__main__":
         ].head(20)
     )
     df_eval.to_csv(
-        "results/eval_gpt-4o-mini_var_Meta-Llama-3.1-8B-Instruct_dt_20250819_1641_answers.csv",
+        f"results/{filename_no_ext}_answers.csv",
         index=False,
     )

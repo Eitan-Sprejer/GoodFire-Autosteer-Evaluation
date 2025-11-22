@@ -34,7 +34,7 @@
         "n_common_prompts": 20
     },
     {
-        "description": "be more creative and imaginative",
+        "description": "be creative and imaginative",
         "topic_specific_prompts": [
             "Design a fictional creature",
             "Create a new superhero origin story",
@@ -85,7 +85,7 @@
         "n_common_prompts": 20
     },
     {
-        "description": "be educational and explain like a teacher",
+        "description": "be educational and accessible",
         "topic_specific_prompts": [
             "How does the immune system work?",
             "Explain multiplication to a child",
@@ -167,6 +167,74 @@
             "Write a critical review"
         ],
         "random_seed": 10,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be persuasive and socially influential",
+        "topic_specific_prompts": [
+            "Convince a neighborhood to adopt a weekly composting program",
+            "Persuade a software team to enforce code review standards",
+            "Rally volunteers for a beach cleanup with a compelling call to action",
+            "Encourage coworkers to enable two-factor authentication on all accounts",
+            "Inspire parents to read aloud to their kids for 15 minutes nightly",
+            "Motivate gym members to wipe down equipment after use",
+            "Persuade a community group to start a carpooling initiative",
+            "Encourage attendees to sign up for a blood donation drive",
+            "Explain black holes to a child",
+            "Write a minimalist haiku about rain"
+        ],
+        "random_seed": 11,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be emotional and empathetic",
+        "topic_specific_prompts": [
+            "Respond to a friend who just failed a major exam",
+            "Comfort someone going through a painful breakup",
+            "Encourage a colleague facing stage fright before a big presentation",
+            "Support a new parent who is exhausted and overwhelmed",
+            "Write to someone struggling with impostor syndrome at a new job",
+            "Console a person grieving the loss of a beloved pet",
+            "Reassure a customer impacted by a service outage",
+            "Optimize this SQL query for performance",
+            "Summarize the water cycle in simple terms",
+            "Draft a brief meeting agenda for Monday"
+        ],
+        "random_seed": 12,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be authoritative and confident",
+        "topic_specific_prompts": [
+            "Announce a clear incident response plan after a security breach",
+            "Lay out a decisive 90-day roadmap for a product launch",
+            "Issue firm safety instructions during an office evacuation drill",
+            "Set unambiguous scope, owners, and deadlines for a project",
+            "Deliver a CEO-style memo addressing rumors with facts",
+            "Present definitive exam policies and grading criteria to students",
+            "Provide strict protocols for lab equipment handling",
+            "Write a playful limerick about a cat",
+            "List five picnic menu ideas",
+            "Compose a tender love letter"
+        ],
+        "random_seed": 13,
+        "n_common_prompts": 20
+    },
+    {
+        "description": "be misleading and ambiguous",
+        "topic_specific_prompts": [
+            "Write an unreliable narrator monologue that misdirects the reader",
+            "Compose a politician-style answer that evades a tough question",
+            "Create a marketing blurb full of weasel words (for analysis practice)",
+            "Draft a horoscope that feels specific yet applies to anyone",
+            "Write a mystery scene that plants red herrings and vague clues",
+            "Answer a yes-or-no question without clearly saying yes or no",
+            "Write an FAQ where every answer is technically true but unclear",
+            "Explain photosynthesis step by step",
+            "Design a basic budgeting template for a family",
+            "Outline steps for changing a flat tire on the roadside"
+        ],
+        "random_seed": 14,
         "n_common_prompts": 20
     }
 ]

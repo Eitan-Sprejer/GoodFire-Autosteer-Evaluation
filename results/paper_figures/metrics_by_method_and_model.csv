@@ -1,0 +1,9 @@
+Model,Steering Method,Accuracy,Behavior,Coherence
+Llama-3.1-8B,Auto Steer,0.463,3.338,2.241
+Llama-3.1-8B,Combined Approach,0.529,3.86,2.524
+Llama-3.1-8B,Control,0.641,2.782,4.568
+Llama-3.1-8B,Simple Prompting,0.662,2.981,4.625
+Llama-3.3-70B,Auto Steer,0.734,3.571,3.894
+Llama-3.3-70B,Combined Approach,0.79,3.333,4.413
+Llama-3.3-70B,Control,0.855,3.089,4.945
+Llama-3.3-70B,Simple Prompting,0.869,3.108,4.945
